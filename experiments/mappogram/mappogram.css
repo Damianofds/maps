@@ -1,0 +1,102 @@
+
+body {    
+    margin: 0;
+    padding: 0;
+}
+
+#content{
+	position: relative;
+	height: 90%;
+	
+	/** DEBUG */
+	background-color: black;
+	border-width: 2px;
+	border-color: black;
+
+}
+
+#map{
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 100%;
+	
+	/** DEBUG */
+	border-width: 2px;
+	border-color: black;
+}
+
+#claim{
+	position: absolute;
+	top: 10%;
+	left: 10%;
+	right: 10%;
+	height:100px;
+	
+	/** DEBUG 
+	background-color: purple;
+    border-width: 2px;
+	border-color: black; */
+}
+
+#photo{
+	position: absolute;
+	top: 40%;
+	left: 10%;
+	right: 70%;
+	height: 35%;
+	
+	/* DEBUG */
+	background-color: yellow;
+	border-width: 2px;
+	border-color: black;
+}
+
+#sponsor{
+	position: absolute;
+	left: 10%;
+	right: 10%;
+	bottom: 10%;
+	height: 50px;
+	
+	/* DEBUG */
+	background-color: red;
+	border-width: 2px;
+	border-color: black;
+}
+
+#footer{
+	position: relative;
+	height: 10%;
+	background-color: #E8E8E8;
+	text-align: center;
+	color: grey;
+	/* DEBUG */
+	border-width: 2px;
+	border-color: black;
+}
+
+
+/* FINE LAYOUT*/
+.claimText{
+	display: block;
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	color: red;
+	top: 20px;
+	left: 0px;
+	font-family: 'Ultra', serif;
+	z-index: 0;
+}
+.claimShdw{
+	display: block;
+	position: absolute;
+	width: 100%;
+	text-align: center;
+	color: black;
+	top: 30px;
+	left: 10px;
+	font-family: 'Ultra', serif;
+	//z-index: -1;
+}
