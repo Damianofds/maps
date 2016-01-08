@@ -1,2 +1,2 @@
-# webiz-sketcher
-A CMS to draft a web based business idea in few clicks.
+# maps-draft
+Only few quick and dirty maps
