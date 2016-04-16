@@ -1,0 +1,26 @@
+var jsonMap = {
+	"map": [{
+		"wmsSource": "http://localhost/geoserver/wms",
+		"center": [41.54, 12.27],
+		"zoom": 6
+	}],
+	"layers": [
+    {
+		"type": "TMS",
+		"url": "http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
+		"attribution": "CartoDB",
+        "label": "cartoDB",
+        "basemap": true,
+        "active": true,
+	}, {
+		"type": "WMS",
+		"layerName": "WORKSPACE:LAYERNAME",
+		"format": "image/png8",
+		"transparent": true,
+		"attribution": "Unknown layer",
+		"active": true,
+		"label": "GRAY_HR_SR_OB_DR",
+		"queryable": false,
+        "basemap": false
+	}]
+}
