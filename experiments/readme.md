@@ -1,4 +1,4 @@
-This directory holds all the experiments made in order to build the components needed for the webiz-sketcher webapp.
+Some toys used here:
 
 * Bootstrap grid components for responsive website
 * Leaflet
