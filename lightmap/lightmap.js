@@ -14,11 +14,12 @@ if(!validateLayersObject(mapConfig.layers)){
 /**
     Parse the map configuration:
     - Create WMS or TMS layers
-    - identify baseMaps overlayMaps and activelayers
+    - identify baseMaps, overlayMaps, activelayers or var timeseries
 */
 var baseMaps = [];
 var overlayMaps = [];
 var activelayers = [];
+var timeseries = [];
 
 var layers = mapConfig.layers;
 for(var i=0; i<layers.length; i++){
@@ -30,12 +31,21 @@ for(var i=0; i<layers.length; i++){
         })
     }
     if(lyr.type == "WMS"){
-        tmpLayer = L.tileLayer.wms(mapConfig.map[0].wmsSource, {
-            layers: lyr.layerName,
-            format: lyr.format,
-            transparent: lyr.transparent,
-            attribution: lyr.attribution
-        })
+        if(lyr.timedimension){
+            tmpLayer = L.tileLayer.wms(mapConfig.map[0].wmsSource, {
+                layers: lyr.layerName,
+                transparent: true,
+                format: 'image/png8',
+                time: '2001-01-01T00:00:00.000Z'
+            });
+        }else{
+            tmpLayer = L.tileLayer.wms(mapConfig.map[0].wmsSource, {
+                layers: lyr.layerName,
+                format: lyr.format,
+                transparent: lyr.transparent,
+                attribution: lyr.attribution
+            });
+        }
     }
     if(lyr.basemap){
         baseMaps[lyr.label] = tmpLayer;
@@ -44,6 +54,9 @@ for(var i=0; i<layers.length; i++){
     }
     if(lyr.active){
         activelayers.push(tmpLayer);
+    }
+    if(lyr.timedimension){
+        timeseries.push(tmpLayer);
     }
 }
 
@@ -59,6 +72,14 @@ map = L.map('map', {
     });
 L.control.layers(baseMaps, overlayMaps).addTo(map);
 
+var sliderControl = L.control.sliderControl({
+    position: 'topright', 
+    layers: timeseries,
+    startTime: '2001-01-01T00:00:00.000Z',
+    endTime: '2014-01-01T00:00:00.000Z',
+    timeStep: 60*60*24*368,
+    range: true}).addTo(map);
+sliderControl.startSlider();
 
 /**
     Helper functions

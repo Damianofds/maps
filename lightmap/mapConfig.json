@@ -40,7 +40,8 @@ var jsonMap = {
 		"active": true,
 		"label": "italy_forest_loss",
 		"queryable": false,
-        "basemap": false
+        "basemap": false,
+        "timedimension": true
 	}, {
 		"type": "WMS",
 		"layerName": "it.geosolutions:comuni2011",
