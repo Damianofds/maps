@@ -33,7 +33,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_forest_loss",
+		"layerName": "it.geosolutions:italy_forest_loss_mosaic",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
