@@ -1,0 +1,26 @@
+var jsonMap = {
+	"map": [{
+		"wmsSource": "http://107.170.66.191/geoserver/wms",
+		"center": [43.845000, 10.507736],
+		"zoom": 15
+	}],
+    "layers": [{
+		"type": "TMS",
+		"url": "http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png",
+		"attribution": "CartoDB",
+        "label": "cartoDB",
+        "basemap": true,
+        "active": true,
+	}, {
+		"type": "WMS",
+		"layerName": "it.geosolutions:mura",
+		"format": "image/png8",
+		"transparent": true,
+		"attribution": "Creative commons. Created by fds",
+		"active": true,
+		"label": "italy_forest_loss",
+		"queryable": false,
+        "basemap": false,
+        "timedimension": true
+	}]
+}
