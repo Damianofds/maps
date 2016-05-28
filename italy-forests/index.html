@@ -9,12 +9,28 @@
     <!-- Leaflet -->
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
     <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
-    <!-- WMS time slider stuff -->
+    
+    <!-- jquery -->
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    
+    <!-- WMS time slider stuff -->
     <link rel="stylesheet" href="https://rawgit.com/BobTorgerson/Leaflet-WMS-Time-Slider/master/SliderControl.css" />
     <script src="https://rawgit.com/BobTorgerson/Leaflet-WMS-Time-Slider/master/SliderControl.js"></script>
+    
+    <!-- Claim -->
+    <script src="https://rawgit.com/davatron5000/FitText.js/master/jquery.fittext.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Ribeye+Marrow' rel='stylesheet' type='text/css'>
+    
+    <!-- lightmap stuff -->
+    <script>
+        $( document ).ready(function (){
+            jQuery("#claim-text").fitText(1.8);
+        });
+    </script>
+    <script src="mapconfig.json"></script>
+	<script src="lightmap.js"></script>
     
     <style type="text/css">
         body {
@@ -23,12 +39,31 @@
         }
         html, body, #map {
             height: 100%;
+            left: 0px;
+            top: 0px;
+        }
+        .claim{
+				top: 50%;
+                display: block;
+				position: absolute;
+				width: 100%;
+				text-align: center;
+				color: black;
+				top: 0px;
+				left: 0px;
+				font-family: 'Ribeye Marrow';
+                font-weight: bold;
+				//z-index: 0;
         }
     </style>
 </head>
 <body>
 	<div id="map"></div>
-    <script src="mapconfig.json"></script>
-	<script src="lightmap.js"></script>
+    <div class="claim" style='-moz-user-select: none; -webkit-user-select: none; -ms-user-select:none; user-select:none;-o-user-select:none;' 
+        unselectable='on'
+        onselectstart='return false;' 
+        onmousedown='return false;'>
+			<div id="claim-text">Italian forests</div>
+     </div>
 </body>
 </html>
