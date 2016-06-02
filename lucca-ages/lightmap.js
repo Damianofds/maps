@@ -63,7 +63,6 @@ function loadMap(){
         }
     }
 
-
     /**
         Build the map object as configured in the map configuration
     */
@@ -83,6 +82,10 @@ function loadMap(){
         timeStep: 60*60*24*368*500,
         range: true}).addTo(map);
     sliderControl.startSlider();
+    
+    $.event.trigger({
+        type: "lightmap-loaded"
+    });
 }
 /**
     Helper functions
