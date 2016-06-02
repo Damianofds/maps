@@ -74,7 +74,7 @@ function loadMap(){
         });
     L.control.layers(baseMaps, overlayMaps).addTo(map);
 
-    var sliderControl = L.control.sliderControl({
+    var sliderControl = L.control.sliderControlFds({
         position: 'topright', 
         layers: timeseries,
         startTime: '0001',
