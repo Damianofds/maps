@@ -1,6 +1,6 @@
 var jsonMap = {
 	"map": [{
-		"wmsSource": "http://107.170.66.191/geoserver/wms",
+		"wmsSource": "http://80.241.213.140/geoserver/wms",
 		"center": [43.845000, 10.507736],
 		"zoom": 15
 	}],
@@ -13,7 +13,7 @@ var jsonMap = {
         "active": true,
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:mura",
+		"layerName": "fds:mura",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Creative commons. Created by fds",
