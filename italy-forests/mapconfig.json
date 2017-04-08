@@ -1,12 +1,12 @@
 var jsonMap = {
 	"map": [{
-		"wmsSource": "http://107.170.66.191/geoserver/wms",
+		"wmsSource": "http://80.241.213.140/geoserver/wms",
 		"center": [41.54, 12.27],
 		"zoom": 6
 	}],
 	"layers": [{
 		"type": "WMS",
-		"layerName": "it.geosolutions:GRAY_HR_SR_OB_DR",
+		"layerName": "fds:GRAY_HR_SR_OB_DR",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -23,7 +23,7 @@ var jsonMap = {
         "active": true,
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_treecover_2000_lzw",
+		"layerName": "fds:italy_treecover_2000_lzw",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "data from Hansen/UMD/Google/USGS/NASA",
@@ -33,7 +33,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_forest_loss_mosaic",
+		"layerName": "fds:italy_forest_loss_mosaic",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -44,7 +44,7 @@ var jsonMap = {
         "timedimension": true
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:comuni2011",
+		"layerName": "fds:comuni2011",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -54,7 +54,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:province2011",
+		"layerName": "fds:province2011",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -64,7 +64,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:regioni2011",
+		"layerName": "fds:regioni2011",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -74,7 +74,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:nazione2011",
+		"layerName": "fds:nazione2011",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -84,7 +84,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_ports",
+		"layerName": "fds:italy_ports",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -94,7 +94,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_railroads",
+		"layerName": "fds:italy_railroads",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "natural earth",
@@ -104,7 +104,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_airports",
+		"layerName": "fds:italy_airports",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -114,7 +114,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_roads",
+		"layerName": "fds:italy_roads",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -124,7 +124,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_urbanareas",
+		"layerName": "fds:italy_urbanareas",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
@@ -134,7 +134,7 @@ var jsonMap = {
         "basemap": false
 	}, {
 		"type": "WMS",
-		"layerName": "it.geosolutions:italy_populatedplaces",
+		"layerName": "fds:italy_populatedplaces",
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
