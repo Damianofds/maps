@@ -68,7 +68,7 @@ var jsonMap = {
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
-		"active": true,
+		"active": false,
 		"label": "regioni2011",
 		"queryable": false,
         "basemap": false
@@ -78,7 +78,7 @@ var jsonMap = {
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
-		"active": true,
+		"active": false,
 		"label": "nazione2011",
 		"queryable": false,
         "basemap": false
@@ -138,7 +138,7 @@ var jsonMap = {
 		"format": "image/png8",
 		"transparent": true,
 		"attribution": "Unknown layer",
-		"active": true,
+		"active": false,
 		"label": "italy_populatedplaces",
 		"queryable": false,
         "basemap": false
