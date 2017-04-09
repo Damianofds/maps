@@ -78,7 +78,7 @@ function loadMap(){
         position: 'topright', 
         layers: timeseries,
         startTime: '1',
-        endTime: '4',
+        endTime: '2016',
         timeStep: 60*60*24*368*500,
         range: true}).addTo(map);
     sliderControl.startSlider();
