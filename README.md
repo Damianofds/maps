@@ -1,20 +1,20 @@
-# Roma Maps
+# Mappe Roma
 
-Static GitHub Pages clients for two maps:
+Client statici GitHub Pages per due mappe:
 
 - `roma-ztl/`
 - `roma-innovazione/`
 
 ## GitHub Pages
 
-The site is plain HTML and can be published from GitHub Pages by serving the repository root from the `main` branch.
+Il sito e HTML semplice e puo essere pubblicato con GitHub Pages servendo la root del repository dal branch `main`.
 
-## GeoServer dependency
+## Dipendenza GeoServer
 
-The clients still depend on GeoServer for WMS/WFS map data. Because GitHub Pages is HTTPS-only, `assets/config.js` must point to an HTTPS GeoServer endpoint with CORS enabled:
+I client dipendono ancora da GeoServer per i dati mappa WMS/WFS. Poiche GitHub Pages usa HTTPS, `assets/config.js` deve puntare a un endpoint GeoServer HTTPS con CORS abilitato:
 
 ```js
 window.MAPS_CONFIG.geoserverBase = "https://maps.example.com/geoserver";
 ```
 
-The current local GeoServer endpoint is HTTP-only, which browser mixed-content rules will block from GitHub Pages.
+Un endpoint GeoServer solo HTTP verrebbe bloccato da GitHub Pages per le regole browser sul mixed content.

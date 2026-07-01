@@ -293,54 +293,54 @@
 </head>
 <body>
   <div id="map"></div>
-  <aside class="panel" aria-label="Layer groups">
+  <aside class="panel" aria-label="Gruppi di livelli">
     <div class="panel-header">
       <div>
         <div class="panel-title">Roma ZTL</div>
-        <div class="panel-subtitle">Rome mobility and low-emission access layers</div>
+        <div class="panel-subtitle">Livelli di mobilita, fasce ambientali e accessi di Roma</div>
       </div>
       <div class="panel-actions">
-        <button type="button" id="panel-toggle">Hide</button>
+        <button type="button" id="panel-toggle">Nascondi</button>
       </div>
     </div>
     <div class="groups" id="groups">
       <div class="control-block">
-        <div class="control-label">Background</div>
-        <div class="segmented" aria-label="Background map">
+        <div class="control-label">Sfondo</div>
+        <div class="segmented" aria-label="Mappa di sfondo">
           <button type="button" class="active" data-basemap="osm">OSM</button>
           <button type="button" data-basemap="satellite">Satellite</button>
         </div>
       </div>
-      <div class="section-title">Rome</div>
+      <div class="section-title">Roma</div>
       <div class="control-block">
-        <div class="control-label">Rome layer set</div>
-        <div class="segmented" aria-label="Rome layer set">
-          <button type="button" class="active" data-rome-mode="Day">Day</button>
-          <button type="button" data-rome-mode="Night">Night</button>
+        <div class="control-label">Set livelli Roma</div>
+        <div class="segmented" aria-label="Set livelli Roma">
+          <button type="button" class="active" data-rome-mode="Day">Giorno</button>
+          <button type="button" data-rome-mode="Night">Notte</button>
         </div>
       </div>
-      <section class="mode-box active" id="mode-box-day" aria-label="Day Rome layers">
+      <section class="mode-box active" id="mode-box-day" aria-label="Livelli Roma giorno">
         <div class="mode-box-title">
-          <span>Day</span>
+          <span>Giorno</span>
         </div>
         <div id="groups-rome-day"></div>
       </section>
-      <section class="mode-box" id="mode-box-night" aria-label="Night Rome layers">
+      <section class="mode-box" id="mode-box-night" aria-label="Livelli Roma notte">
         <div class="mode-box-title">
-          <span>Night</span>
+          <span>Notte</span>
         </div>
         <div id="groups-rome-night"></div>
       </section>
       <div id="groups-rome-out"></div>
-      <div class="section-title">Other EU</div>
+      <div class="section-title">Altre citta UE</div>
       <div id="groups-other-eu"></div>
     </div>
   </aside>
-  <aside class="legend" aria-label="Map legend">
-    <div class="legend-title">Legend</div>
+  <aside class="legend" aria-label="Legenda mappa">
+    <div class="legend-title">Legenda</div>
     <div class="legend-item">
       <img alt="" data-geoserver-path="/fds/wms?service=WMS&amp;version=1.1.1&amp;request=GetLegendGraphic&amp;format=image/png&amp;width=24&amp;height=24&amp;layer=fds:ZTLFasciaVerde_ZTLFasciaVerde_Accessi&amp;style=mobility_varchi_default">
-      <div class="legend-label">Varchi / access points</div>
+      <div class="legend-label">Varchi / punti di accesso</div>
     </div>
     <div class="legend-item">
       <img alt="" data-geoserver-path="/fds/wms?service=WMS&amp;version=1.1.1&amp;request=GetLegendGraphic&amp;format=image/png&amp;width=24&amp;height=24&amp;layer=fds:ZTLCentronotturna_Centro_notturna_area&amp;style=polygon">
@@ -348,10 +348,10 @@
     </div>
     <div class="legend-item">
       <img alt="" data-geoserver-path="/fds/wms?service=WMS&amp;version=1.1.1&amp;request=GetLegendGraphic&amp;format=image/png&amp;width=24&amp;height=24&amp;layer=fds:ZTLFasciaVerde_ZTLFasciaVerde_Confine&amp;style=ztl_fascia_verde_outline">
-      <div class="legend-label">Fascia Verde border</div>
+      <div class="legend-label">Confine Fascia Verde</div>
     </div>
   </aside>
-  <div class="attribution">Background: <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></div>
+  <div class="attribution">Sfondo: <a href="https://www.openstreetmap.org/copyright">contributori OpenStreetMap</a></div>
   <script src="../assets/config.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -382,7 +382,7 @@
         version: "1.1.1",
         cacheBust: "polygon_restore_1",
         pane: "basemapPane",
-        attribution: "OpenStreetMap contributors"
+        attribution: "contributori OpenStreetMap"
       }),
       satellite: L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -524,23 +524,23 @@
       if (id.indexOf(".") > -1) {
         return id.split(".")[0];
       }
-      return "Feature " + (index + 1);
+      return "Elemento " + (index + 1);
     }
 
     function renderFeatureInfo(data) {
       var features = data && data.features ? data.features : [];
       if (!features.length) {
-        return '<div class="feature-popup"><h3>No feature found</h3></div>';
+        return '<div class="feature-popup"><h3>Nessun elemento trovato</h3></div>';
       }
 
-      var html = '<div class="feature-popup"><h3>' + features.length + ' feature' + (features.length === 1 ? '' : 's') + '</h3>';
+      var html = '<div class="feature-popup"><h3>' + features.length + ' element' + (features.length === 1 ? 'o' : 'i') + '</h3>';
       for (var i = 0; i < features.length; i++) {
         var feature = features[i];
         var props = feature.properties || {};
         html += '<h4>' + escapeHtml(featureTitle(feature, i)) + '</h4><table>';
         var keys = Object.keys(props);
         if (!keys.length) {
-          html += '<tr><td>No attributes</td></tr>';
+          html += '<tr><td>Nessun attributo</td></tr>';
         }
         for (var k = 0; k < keys.length; k++) {
           var key = keys[k];
@@ -557,20 +557,20 @@
       if (!layerNames.length) {
         L.popup()
           .setLatLng(event.latlng)
-          .setContent('<div class="feature-popup"><h3>No visible query layers</h3></div>')
+          .setContent('<div class="feature-popup"><h3>Nessun livello interrogabile visibile</h3></div>')
           .openOn(map);
         return;
       }
 
       var popup = L.popup()
         .setLatLng(event.latlng)
-        .setContent('<div class="feature-popup"><h3>Loading feature info...</h3></div>')
+        .setContent('<div class="feature-popup"><h3>Caricamento informazioni...</h3></div>')
         .openOn(map);
 
       fetch(getFeatureInfoUrl(event.latlng, layerNames), { credentials: "same-origin" })
         .then(function (response) {
           if (!response.ok) {
-            throw new Error("GetFeatureInfo failed: HTTP " + response.status);
+            throw new Error("GetFeatureInfo non riuscito: HTTP " + response.status);
           }
           return response.json();
         })
@@ -578,7 +578,7 @@
           popup.setContent(renderFeatureInfo(data));
         })
         .catch(function (error) {
-          popup.setContent('<div class="feature-popup"><h3>Feature info error</h3><div>' + escapeHtml(error.message) + '</div></div>');
+          popup.setContent('<div class="feature-popup"><h3>Errore informazioni elemento</h3><div>' + escapeHtml(error.message) + '</div></div>');
         });
     });
 
@@ -615,7 +615,7 @@
 
       var details = document.createElement("details");
       var summary = document.createElement("summary");
-      summary.appendChild(document.createTextNode("Layers"));
+      summary.appendChild(document.createTextNode("Livelli"));
       details.appendChild(summary);
 
       var list = document.createElement("ul");
@@ -725,7 +725,7 @@
     document.getElementById("panel-toggle").onclick = function () {
       var panel = document.querySelector(".panel");
       var collapsed = panel.classList.toggle("collapsed");
-      this.textContent = collapsed ? "Show" : "Hide";
+      this.textContent = collapsed ? "Mostra" : "Nascondi";
       setTimeout(function () { map.invalidateSize(); }, 0);
     };
   </script>

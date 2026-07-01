@@ -326,53 +326,53 @@
     <div class="hero">
       <div class="eyebrow">Tecnopolo &middot; Roma</div>
       <h1>Roma Innovazione</h1>
-      <p>Companies and technology organisations across Rome’s innovation ecosystem.</p>
+      <p>Aziende e organizzazioni tecnologiche nell'ecosistema dell'innovazione di Roma.</p>
     </div>
     <div class="controls">
-      <div class="control-label">Background</div>
+      <div class="control-label">Sfondo</div>
       <div class="segmented">
         <button class="active" type="button" data-basemap="osm">OpenStreetMap</button>
         <button type="button" data-basemap="satellite">Satellite</button>
       </div>
-      <section class="layer-card" aria-label="Tecnopolo site layers">
+      <section class="layer-card" aria-label="Livelli per sede Tecnopolo">
         <label class="layer-heading">
           <input id="companies-toggle" type="checkbox" checked>
           <span class="layer-copy">
-            <span class="layer-name">Tecnopolo sites</span>
-            <span class="layer-meta" id="site-summary">Loading site layers...</span>
+            <span class="layer-name">Sedi Tecnopolo</span>
+            <span class="layer-meta" id="site-summary">Caricamento sedi...</span>
           </span>
         </label>
         <div class="site-tools">
-          <button id="sites-select-all" type="button">All sites</button>
-          <button id="sites-clear" type="button">Clear</button>
+          <button id="sites-select-all" type="button">Tutte</button>
+          <button id="sites-clear" type="button">Nessuna</button>
         </div>
         <div class="site-list" id="site-list">
-          <div class="layer-meta">Loading site layers...</div>
+          <div class="layer-meta">Caricamento sedi...</div>
         </div>
       </section>
-      <div class="status"><span class="status-dot"></span><span id="status-text">Layer ready</span></div>
+      <div class="status"><span class="status-dot"></span><span id="status-text">Livello pronto</span></div>
     </div>
   </aside>
   <aside class="legend">
-    <div class="legend-title">Innovation locations</div>
-    <div class="legend-row"><span class="symbol point"></span><span>Single company</span></div>
-    <div class="legend-row"><span class="symbol cluster">8</span><span>Nearby companies</span></div>
+    <div class="legend-title">Luoghi dell'innovazione</div>
+    <div class="legend-row"><span class="symbol point"></span><span>Azienda singola</span></div>
+    <div class="legend-row"><span class="symbol cluster">8</span><span>Aziende vicine</span></div>
   </aside>
-  <section class="feature-table" id="feature-table" aria-label="Features in the current map view">
+  <section class="feature-table" id="feature-table" aria-label="Elementi nella vista corrente della mappa">
     <div class="table-toolbar">
       <button class="table-toggle" id="table-toggle" type="button" aria-expanded="false" aria-controls="table-content">
         <span class="table-chevron">&#9650;</span>
-        <span>Feature table</span>
+        <span>Tabella elementi</span>
       </button>
-      <span class="table-count" id="table-count">Loading visible records...</span>
-      <input class="table-search" id="table-search" type="search" placeholder="Search visible records..." aria-label="Search visible records">
+      <span class="table-count" id="table-count">Caricamento record visibili...</span>
+      <input class="table-search" id="table-search" type="search" placeholder="Cerca nei record visibili..." aria-label="Cerca nei record visibili">
       <details class="field-picker" id="field-picker">
-        <summary>Search fields</summary>
+        <summary>Campi di ricerca</summary>
         <div class="field-options" id="field-options"></div>
       </details>
     </div>
     <div class="table-scroll" id="table-content">
-      <div class="table-message" id="table-message">Loading visible records...</div>
+      <div class="table-message" id="table-message">Caricamento record visibili...</div>
       <table class="records-table" id="records-table" hidden>
         <thead></thead>
         <tbody></tbody>
@@ -397,7 +397,7 @@
         layers: "fds:osm_openstreetmap",
         format: "image/png",
         version: "1.1.1",
-        attribution: "OpenStreetMap contributors"
+        attribution: "contributori OpenStreetMap"
       }),
       satellite: L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -486,24 +486,24 @@
           map.removeLayer(companyOverlay);
           companyOverlay = null;
         }
-        document.getElementById("status-text").textContent = "Layer hidden";
+        document.getElementById("status-text").textContent = "Livello nascosto";
         return;
       }
       var requestId = ++overlayRequest;
       var view = projectedView();
       var image = new Image();
       var url = wmsUrl("GetMap", { _ts: Date.now() });
-      document.getElementById("status-text").textContent = "Updating clusters...";
+      document.getElementById("status-text").textContent = "Aggiornamento cluster...";
       image.onload = function () {
         if (requestId !== overlayRequest || !layerVisible) return;
         var next = L.imageOverlay(url, view.bounds, { opacity: 0.96, interactive: false });
         next.addTo(map);
         if (companyOverlay) map.removeLayer(companyOverlay);
         companyOverlay = next;
-        document.getElementById("status-text").textContent = "Layer ready";
+        document.getElementById("status-text").textContent = "Livello pronto";
       };
       image.onerror = function () {
-        if (requestId === overlayRequest) document.getElementById("status-text").textContent = "Layer failed to load";
+        if (requestId === overlayRequest) document.getElementById("status-text").textContent = "Caricamento livello non riuscito";
       };
       image.src = url;
     }
@@ -517,21 +517,21 @@
     function websiteLink(value) {
       if (!value) return "-";
       var href = /^https?:\/\//i.test(value) ? value : "https://" + value;
-      return '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener">Visit website</a>';
+      return '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener">Visita il sito</a>';
     }
 
     function companyDetails(properties) {
       var p = properties || {};
-      return '<div class="sector">' + escapeHtml(p.sector || "Innovation company") + '</div><dl>' +
-        '<dt>Description</dt><dd>' + escapeHtml(p.descriptio || p.description || "-") + '</dd>' +
-        '<dt>Location</dt><dd>' + escapeHtml(p.main_addr || "-") + '</dd>' +
-        '<dt>Tecnopolo site</dt><dd>' + escapeHtml(p.sede || "-") + '</dd>' +
-        '<dt>Website</dt><dd>' + websiteLink(p.website) + '</dd></dl>';
+      return '<div class="sector">' + escapeHtml(p.sector || "Azienda innovativa") + '</div><dl>' +
+        '<dt>Descrizione</dt><dd>' + escapeHtml(p.descriptio || p.description || "-") + '</dd>' +
+        '<dt>Posizione</dt><dd>' + escapeHtml(p.main_addr || "-") + '</dd>' +
+        '<dt>Sede Tecnopolo</dt><dd>' + escapeHtml(p.sede || "-") + '</dd>' +
+        '<dt>Sito web</dt><dd>' + websiteLink(p.website) + '</dd></dl>';
     }
 
     function popupContent(feature) {
       var p = feature.properties || {};
-      return '<div class="feature-popup"><h3>' + escapeHtml(p.name || "Tecnopolo company") + '</h3>' +
+      return '<div class="feature-popup"><h3>' + escapeHtml(p.name || "Azienda Tecnopolo") + '</h3>' +
         companyDetails(p) + '</div>';
     }
 
@@ -598,9 +598,9 @@
       var siteList = document.getElementById("site-list");
       var selected = selectedSiteValues();
       document.getElementById("companies-toggle").checked = !!selected.length;
-      document.getElementById("site-summary").textContent = selected.length + " of " + siteOptions.length + " sites visible";
+      document.getElementById("site-summary").textContent = selected.length + " sedi visibili su " + siteOptions.length;
       if (!siteOptions.length) {
-        siteList.innerHTML = '<div class="layer-meta">No site layers available.</div>';
+        siteList.innerHTML = '<div class="layer-meta">Nessuna sede disponibile.</div>';
         return;
       }
       siteList.innerHTML = siteOptions.map(function (site) {
@@ -630,7 +630,7 @@
         .then(function (data) {
           var counts = {};
           (data.features || []).forEach(function (feature) {
-            var site = (feature.properties && feature.properties.sede) || "Unassigned";
+            var site = (feature.properties && feature.properties.sede) || "Non assegnata";
             counts[site] = (counts[site] || 0) + 1;
           });
           siteOptions = Object.keys(counts).sort(function (a, b) {
@@ -644,20 +644,20 @@
           refreshViewport();
         })
         .catch(function () {
-          document.getElementById("site-summary").textContent = "Site layers unavailable";
-          document.getElementById("site-list").innerHTML = '<div class="layer-meta">Could not load site layers.</div>';
+          document.getElementById("site-summary").textContent = "Sedi non disponibili";
+          document.getElementById("site-list").innerHTML = '<div class="layer-meta">Impossibile caricare le sedi.</div>';
         });
     }
 
     function displayColumnName(key) {
       var labels = {
-        name: "Name",
-        sector: "Sector",
-        descriptio: "Description",
-        description: "Description",
-        main_addr: "Address",
-        sede: "Tecnopolo site",
-        website: "Website"
+        name: "Nome",
+        sector: "Settore",
+        descriptio: "Descrizione",
+        description: "Descrizione",
+        main_addr: "Indirizzo",
+        sede: "Sede Tecnopolo",
+        website: "Sito web"
       };
       return labels[key] || key.replace(/_/g, " ").replace(/\b\w/g, function (letter) {
         return letter.toUpperCase();
@@ -743,15 +743,15 @@
 
       var count = document.getElementById("table-count");
       count.textContent = query
-        ? filtered.length + " of " + visibleFeatures.length + " visible records"
-        : visibleFeatures.length + " visible record" + (visibleFeatures.length === 1 ? "" : "s");
+        ? filtered.length + " di " + visibleFeatures.length + " record visibili"
+        : visibleFeatures.length + " record visibil" + (visibleFeatures.length === 1 ? "e" : "i");
 
       var table = document.getElementById("records-table");
       var message = document.getElementById("table-message");
       if (!tableColumns.length || !filtered.length) {
         table.hidden = true;
         message.hidden = false;
-        message.textContent = visibleFeatures.length ? "No records match this search." : "No records in the current map view.";
+        message.textContent = visibleFeatures.length ? "Nessun record corrisponde alla ricerca." : "Nessun record nella vista corrente.";
         return;
       }
 
@@ -789,14 +789,14 @@
         tableColumns = [];
         document.getElementById("records-table").hidden = true;
         document.getElementById("table-message").hidden = false;
-        document.getElementById("table-message").textContent = "No site layers selected.";
-        document.getElementById("table-count").textContent = "No sites visible";
+        document.getElementById("table-message").textContent = "Nessuna sede selezionata.";
+        document.getElementById("table-count").textContent = "Nessuna sede visibile";
         return;
       }
       var requestId = ++tableRequest;
       if (tableAbortController) tableAbortController.abort();
       tableAbortController = typeof AbortController === "undefined" ? null : new AbortController();
-      document.getElementById("table-count").textContent = "Updating visible records...";
+      document.getElementById("table-count").textContent = "Aggiornamento record visibili...";
       fetch(visibleFeaturesUrl(), {
         credentials: "same-origin",
         signal: tableAbortController ? tableAbortController.signal : undefined
@@ -821,8 +821,8 @@
           tableColumns = [];
           document.getElementById("records-table").hidden = true;
           document.getElementById("table-message").hidden = false;
-          document.getElementById("table-message").textContent = "Could not load records for this map view.";
-          document.getElementById("table-count").textContent = "Table unavailable";
+          document.getElementById("table-message").textContent = "Impossibile caricare i record per questa vista.";
+          document.getElementById("table-count").textContent = "Tabella non disponibile";
         });
     }
 
@@ -836,13 +836,13 @@
         return String(a.properties.name || "").localeCompare(String(b.properties.name || ""));
       });
       var html = '<div class="feature-popup cluster-popup"><strong>' + escapeHtml(sorted.length || expectedCount) +
-        '</strong><h3>companies in this cluster</h3>' +
-        '<div>All companies are listed below, including locations sharing the exact same coordinates.</div>' +
+        '</strong><h3>aziende in questo cluster</h3>' +
+        '<div>Tutte le aziende sono elencate qui sotto, incluse quelle con le stesse coordinate.</div>' +
         '<div class="cluster-results">';
       for (var i = 0; i < sorted.length; i++) {
         var p = sorted[i].properties || {};
         html += '<details class="company-result"' + (i === 0 ? " open" : "") + '><summary>' +
-          escapeHtml(p.name || "Tecnopolo company") + '</summary><div class="company-body">' +
+          escapeHtml(p.name || "Azienda Tecnopolo") + '</summary><div class="company-body">' +
           companyDetails(p) + '</div></details>';
       }
       return html + '</div></div>';
@@ -861,7 +861,7 @@
         x: Math.round(point.x),
         y: Math.round(point.y)
       });
-      var popup = L.popup().setLatLng(event.latlng).setContent("Loading...").openOn(map);
+      var popup = L.popup().setLatLng(event.latlng).setContent("Caricamento...").openOn(map);
       fetch(url, { credentials: "same-origin" })
         .then(function (response) {
           if (!response.ok) throw new Error("HTTP " + response.status);
@@ -870,7 +870,7 @@
         .then(function (data) {
           var features = data.features || [];
           if (!features.length) {
-            popup.setContent("No company found here.");
+            popup.setContent("Nessuna azienda trovata qui.");
             return;
           }
           var selected = features[0];
@@ -881,11 +881,11 @@
           }
           var membersUrl = clusterMembersUrl(properties.envBBOX);
           if (!membersUrl) {
-            throw new Error("The cluster bounds are unavailable.");
+            throw new Error("I limiti del cluster non sono disponibili.");
           }
           popup.setContent(
             '<div class="feature-popup cluster-popup"><strong>' + escapeHtml(properties.count) +
-            '</strong><h3>Loading companies...</h3></div>'
+            '</strong><h3>Caricamento aziende...</h3></div>'
           );
           return fetch(membersUrl, { credentials: "same-origin" })
             .then(function (response) {
@@ -896,7 +896,7 @@
               popup.setContent(clusterPopupContent(members.features || [], properties.count));
             });
         })
-        .catch(function () { popup.setContent("Could not load company information."); });
+        .catch(function () { popup.setContent("Impossibile caricare le informazioni aziendali."); });
     });
 
     document.getElementById("companies-toggle").onchange = function () {
