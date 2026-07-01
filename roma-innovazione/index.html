@@ -364,15 +364,15 @@
         <span class="table-chevron">&#9650;</span>
         <span>Lista aziende</span>
       </button>
-      <span class="table-count" id="table-count">Caricamento record visibili...</span>
-      <input class="table-search" id="table-search" type="search" placeholder="Cerca nei record visibili..." aria-label="Cerca nei record visibili">
+      <span class="table-count" id="table-count">Caricamento aziende visibili...</span>
+      <input class="table-search" id="table-search" type="search" placeholder="Cerca tra le aziende visibili..." aria-label="Cerca tra le aziende visibili">
       <details class="field-picker" id="field-picker">
         <summary>Campi di ricerca</summary>
         <div class="field-options" id="field-options"></div>
       </details>
     </div>
     <div class="table-scroll" id="table-content">
-      <div class="table-message" id="table-message">Caricamento record visibili...</div>
+      <div class="table-message" id="table-message">Caricamento aziende visibili...</div>
       <table class="records-table" id="records-table" hidden>
         <thead></thead>
         <tbody></tbody>
@@ -743,8 +743,8 @@
 
       var count = document.getElementById("table-count");
       count.textContent = query
-        ? filtered.length + " di " + visibleFeatures.length + " record visibili"
-        : visibleFeatures.length + " record visibil" + (visibleFeatures.length === 1 ? "e" : "i");
+        ? filtered.length + " di " + visibleFeatures.length + " aziende visibili"
+        : visibleFeatures.length + (visibleFeatures.length === 1 ? " azienda visibile" : " aziende visibili");
 
       var table = document.getElementById("records-table");
       var message = document.getElementById("table-message");
@@ -796,7 +796,7 @@
       var requestId = ++tableRequest;
       if (tableAbortController) tableAbortController.abort();
       tableAbortController = typeof AbortController === "undefined" ? null : new AbortController();
-      document.getElementById("table-count").textContent = "Aggiornamento record visibili...";
+      document.getElementById("table-count").textContent = "Aggiornamento aziende visibili...";
       fetch(visibleFeaturesUrl(), {
         credentials: "same-origin",
         signal: tableAbortController ? tableAbortController.signal : undefined
