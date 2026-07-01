@@ -7,7 +7,7 @@ Static GitHub Pages clients for two maps:
 
 ## GitHub Pages
 
-The site is plain HTML and can be published from GitHub Pages. The included workflow publishes the repository root.
+The site is plain HTML and can be published from GitHub Pages by serving the repository root from the `main` branch.
 
 ## GeoServer dependency
 
