@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Roma ZTL</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      width: 100%;
+    }
+    body {
+      color: #17202a;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+    #map {
+      background: #eef2f3;
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(31, 41, 55, 0.18);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+      left: 14px;
+      max-height: calc(100vh - 28px);
+      overflow: hidden;
+      position: absolute;
+      top: 14px;
+      width: 340px;
+      z-index: 1005;
+    }
+    .panel-header {
+      align-items: center;
+      border-bottom: 1px solid #d8dee6;
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 12px 10px;
+    }
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .panel-subtitle {
+      color: #52606d;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+    .panel-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .panel.collapsed {
+      max-height: none;
+    }
+    .panel.collapsed .groups {
+      display: none;
+    }
+    .control-block {
+      margin: 4px 0 10px;
+    }
+    .control-label {
+      color: #52606d;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin: 0 0 5px;
+      text-transform: uppercase;
+    }
+    .segmented {
+      display: grid;
+      gap: 4px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    button {
+      background: #ffffff;
+      border: 1px solid #b8c2cc;
+      border-radius: 4px;
+      color: #1f2933;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 5px 8px;
+    }
+    button:hover {
+      background: #f4f7fa;
+    }
+    .segmented button.active {
+      background: #1f2933;
+      border-color: #1f2933;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .groups {
+      max-height: calc(100vh - 96px);
+      overflow: auto;
+      padding: 8px 10px 12px;
+    }
+    .group {
+      border-bottom: 1px solid #edf0f4;
+      padding: 7px 0;
+    }
+    .group:last-child {
+      border-bottom: 0;
+    }
+    .group.hidden {
+      display: none;
+    }
+    .mode-box {
+      border: 2px solid #a7b4c2;
+      border-radius: 6px;
+      margin: 8px 0 10px;
+      padding: 8px;
+    }
+    .mode-box.active {
+      border-color: #1f2933;
+    }
+    .mode-box-title {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+    .mode-box-title span {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .mode-actions {
+      display: flex;
+      gap: 4px;
+    }
+    .section-title {
+      color: #1f2933;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin: 10px 0 4px;
+      text-transform: uppercase;
+    }
+    .section-title:first-child {
+      margin-top: 0;
+    }
+    .group-label {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      min-width: 0;
+    }
+    .group-label input {
+      flex: 0 0 auto;
+    }
+    .group-name {
+      flex: 1 1 auto;
+      font-size: 13px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .count {
+      background: #e8eef5;
+      border-radius: 999px;
+      color: #425466;
+      flex: 0 0 auto;
+      font-size: 11px;
+      padding: 2px 7px;
+    }
+    details {
+      margin: 5px 0 0 26px;
+    }
+    summary {
+      color: #52606d;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .layer-list {
+      color: #52606d;
+      font-size: 11px;
+      line-height: 1.35;
+      list-style: none;
+      margin: 5px 0 0;
+      max-height: 110px;
+      overflow: auto;
+      padding: 0;
+    }
+    .layer-list li {
+      overflow-wrap: anywhere;
+      padding: 2px 0;
+    }
+    .feature-popup {
+      max-height: 280px;
+      max-width: 360px;
+      overflow: auto;
+    }
+    .feature-popup h3 {
+      font-size: 13px;
+      margin: 0 0 8px;
+    }
+    .feature-popup h4 {
+      border-top: 1px solid #d8dee6;
+      font-size: 12px;
+      margin: 8px 0 4px;
+      padding-top: 8px;
+    }
+    .feature-popup table {
+      border-collapse: collapse;
+      font-size: 11px;
+      width: 100%;
+    }
+    .feature-popup th,
+    .feature-popup td {
+      border-bottom: 1px solid #edf0f4;
+      padding: 3px 4px;
+      text-align: left;
+      vertical-align: top;
+    }
+    .feature-popup th {
+      color: #52606d;
+      font-weight: 700;
+      max-width: 130px;
+      overflow-wrap: anywhere;
+    }
+    .feature-popup td {
+      overflow-wrap: anywhere;
+    }
+    .legend {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(31, 41, 55, 0.18);
+      bottom: 34px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+      padding: 10px 12px;
+      position: absolute;
+      right: 10px;
+      width: 220px;
+      z-index: 1005;
+    }
+    .legend-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .legend-item {
+      align-items: center;
+      display: flex;
+      gap: 8px;
+      margin: 7px 0;
+      min-height: 24px;
+    }
+    .legend-item img {
+      flex: 0 0 auto;
+      max-height: 32px;
+      max-width: 48px;
+    }
+    .legend-label {
+      color: #1f2933;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+    .attribution {
+      background: rgba(255, 255, 255, 0.86);
+      bottom: 6px;
+      font-size: 11px;
+      padding: 3px 7px;
+      position: absolute;
+      right: 6px;
+      z-index: 1005;
+    }
+    .attribution a {
+      color: #1f5fbf;
+      text-decoration: none;
+    }
+    @media (max-width: 640px) {
+      .panel {
+        left: 8px;
+        max-height: 50vh;
+        top: 8px;
+        width: calc(100vw - 16px);
+      }
+      .groups {
+        max-height: calc(50vh - 82px);
+      }
+      .legend {
+        bottom: 28px;
+        right: 8px;
+        width: 190px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <aside class="panel" aria-label="Layer groups">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title">Roma ZTL</div>
+        <div class="panel-subtitle">Rome mobility and low-emission access layers</div>
+      </div>
+      <div class="panel-actions">
+        <button type="button" id="panel-toggle">Hide</button>
+      </div>
+    </div>
+    <div class="groups" id="groups">
+      <div class="control-block">
+        <div class="control-label">Background</div>
+        <div class="segmented" aria-label="Background map">
+          <button type="button" class="active" data-basemap="osm">OSM</button>
+          <button type="button" data-basemap="satellite">Satellite</button>
+        </div>
+      </div>
+      <div class="section-title">Rome</div>
+      <div class="control-block">
+        <div class="control-label">Rome layer set</div>
+        <div class="segmented" aria-label="Rome layer set">
+          <button type="button" class="active" data-rome-mode="Day">Day</button>
+          <button type="button" data-rome-mode="Night">Night</button>
+        </div>
+      </div>
+      <section class="mode-box active" id="mode-box-day" aria-label="Day Rome layers">
+        <div class="mode-box-title">
+          <span>Day</span>
+        </div>
+        <div id="groups-rome-day"></div>
+      </section>
+      <section class="mode-box" id="mode-box-night" aria-label="Night Rome layers">
+        <div class="mode-box-title">
+          <span>Night</span>
+        </div>
+        <div id="groups-rome-night"></div>
+      </section>
+      <div id="groups-rome-out"></div>
+      <div class="section-title">Other EU</div>
+      <div id="groups-other-eu"></div>
+    </div>
+  </aside>
+  <aside class="legend" aria-label="Map legend">
+    <div class="legend-title">Legend</div>
+    <div class="legend-item">
+      <img alt="" data-geoserver-path="/fds/wms?service=WMS&amp;version=1.1.1&amp;request=GetLegendGraphic&amp;format=image/png&amp;width=24&amp;height=24&amp;layer=fds:ZTLFasciaVerde_ZTLFasciaVerde_Accessi&amp;style=mobility_varchi_default">
+      <div class="legend-label">Varchi / access points</div>
+    </div>
+    <div class="legend-item">
+      <img alt="" data-geoserver-path="/fds/wms?service=WMS&amp;version=1.1.1&amp;request=GetLegendGraphic&amp;format=image/png&amp;width=24&amp;height=24&amp;layer=fds:ZTLCentronotturna_Centro_notturna_area&amp;style=polygon">
+      <div class="legend-label">ZTL Aree</div>
+    </div>
+    <div class="legend-item">
+      <img alt="" data-geoserver-path="/fds/wms?service=WMS&amp;version=1.1.1&amp;request=GetLegendGraphic&amp;format=image/png&amp;width=24&amp;height=24&amp;layer=fds:ZTLFasciaVerde_ZTLFasciaVerde_Confine&amp;style=ztl_fascia_verde_outline">
+      <div class="legend-label">Fascia Verde border</div>
+    </div>
+  </aside>
+  <div class="attribution">Background: <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></div>
+  <script src="../assets/config.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var GEOSERVER_BASE = ((window.MAPS_CONFIG && window.MAPS_CONFIG.geoserverBase) || "/geoserver").replace(/\/+$/, "");
+    function geoserverUrl(path) {
+      return GEOSERVER_BASE + path;
+    }
+    document.querySelectorAll("[data-geoserver-path]").forEach(function (image) {
+      image.src = geoserverUrl(image.getAttribute("data-geoserver-path"));
+    });
+
+    var layerGroups = [{"name": "rome:Day:ZTLTrasteverediurnaenotturna_ZTLTrastevere-varchidiingresso", "label": "Trastevere Varchi Di Ingresso", "section": "Rome", "mode": "Day", "visible": true, "bounds": null, "layers": [{"name": "fds:ZTLTrasteverediurnaenotturna_ZTLTrastevere-varchidiingresso", "label": "Trastevere Varchi Di Ingresso", "kind": "point", "order": 2}]}, {"name": "rome:Day:varchiZTLcentrodiurna_varchi_ZTL_centro_diurna", "label": "Varchi Centro Diurna", "section": "Rome", "mode": "Day", "visible": true, "bounds": null, "layers": [{"name": "fds:varchiZTLcentrodiurna_varchi_ZTL_centro_diurna", "label": "Varchi Centro Diurna", "kind": "point", "order": 2}]}, {"name": "rome:Day:ZTLcentrodiurna-settori_settori_ZTL_centro", "label": "Settori Centro", "section": "Rome", "mode": "Day", "visible": true, "bounds": null, "layers": [{"name": "fds:ZTLcentrodiurna-settori_settori_ZTL_centro", "label": "Settori Centro", "kind": "polygon", "order": 0}]}, {"name": "rome:Night:ZTLCentronotturna_Centro_notturna_varchi", "label": "Centro Notturna Varchi", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLCentronotturna_Centro_notturna_varchi", "label": "Centro Notturna Varchi", "kind": "point", "order": 2}]}, {"name": "rome:Night:ZTLCentronotturna_Centro_notturna_area", "label": "Centro Notturna Area", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLCentronotturna_Centro_notturna_area", "label": "Centro Notturna Area", "kind": "polygon", "order": 0}]}, {"name": "rome:Night:ZTLSanLorenzonotturna_ZTLSanLorenzo-varchidiingresso", "label": "San Lorenzo Varchi Di Ingresso", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLSanLorenzonotturna_ZTLSanLorenzo-varchidiingresso", "label": "San Lorenzo Varchi Di Ingresso", "kind": "point", "order": 2}]}, {"name": "rome:Night:ZTLSanLorenzonotturna_ZTLSanLorenzo-confini", "label": "San Lorenzo Confini", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLSanLorenzonotturna_ZTLSanLorenzo-confini", "label": "San Lorenzo Confini", "kind": "polygon", "order": 0}]}, {"name": "rome:Night:ZTLTestaccionotturna_ZTLTestaccio-varchidiingresso", "label": "Testaccio Varchi Di Ingresso", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLTestaccionotturna_ZTLTestaccio-varchidiingresso", "label": "Testaccio Varchi Di Ingresso", "kind": "point", "order": 2}]}, {"name": "rome:Night:ZTLTestaccionotturna_ZTLTestaccio-confini", "label": "Testaccio Confini", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLTestaccionotturna_ZTLTestaccio-confini", "label": "Testaccio Confini", "kind": "polygon", "order": 0}]}, {"name": "rome:Night:ZTLTrasteverediurnaenotturna_ZTLTrastevere-varchidiingresso", "label": "Trastevere Varchi Di Ingresso", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLTrasteverediurnaenotturna_ZTLTrastevere-varchidiingresso", "label": "Trastevere Varchi Di Ingresso", "kind": "point", "order": 2}]}, {"name": "rome:Night:ZTLTrasteverediurnaenotturna_ZTLTrastevere-areanotturna", "label": "Trastevere Area Notturna", "section": "Rome", "mode": "Night", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLTrasteverediurnaenotturna_ZTLTrastevere-areanotturna", "label": "Trastevere Area Notturna", "kind": "polygon", "order": 0}]}, {"name": "rome:Out:ZTLTridente(settoreA1)_ZTLTridente-varchidiingresso", "label": "Tridente Varchi Di Ingresso", "section": "Rome", "mode": "Out", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLTridente(settoreA1)_ZTLTridente-varchidiingresso", "label": "Tridente Varchi Di Ingresso", "kind": "point", "order": 2}]}, {"name": "rome:Out:ZTLTridente(settoreA1)_ZTLTridente-confini", "label": "Tridente Confini", "section": "Rome", "mode": "Out", "visible": false, "bounds": null, "layers": [{"name": "fds:ZTLTridente(settoreA1)_ZTLTridente-confini", "label": "Tridente Confini", "kind": "line", "order": 1}]}, {"name": "rome:Out:ZTLFasciaVerde_ZTLFasciaVerde_Confine", "label": "Fascia Verde Confine", "section": "Rome", "mode": "Out", "visible": true, "bounds": null, "layers": [{"name": "fds:ZTLFasciaVerde_ZTLFasciaVerde_Confine", "label": "Fascia Verde Confine", "kind": "polygon", "order": 0}]}, {"name": "rome:Out:ZTLFasciaVerde_ZTLFasciaVerde_Accessi", "label": "Fascia Verde Accessi", "section": "Rome", "mode": "Out", "visible": true, "bounds": null, "layers": [{"name": "fds:ZTLFasciaVerde_ZTLFasciaVerde_Accessi", "label": "Fascia Verde Accessi", "kind": "point", "order": 2}]}, {"name": "other:ZTLMadrid_DistritoCentro", "label": "Distrito Centro", "section": "Other EU", "mode": null, "visible": false, "bounds": [[40.2, -4.05], [40.65, -3.35]], "layers": [{"name": "fds:ZTLMadrid_DistritoCentro", "label": "Distrito Centro", "kind": "polygon", "order": 0}]}, {"name": "other:ZTLMadrid_PlazaEliptica", "label": "Plaza Eliptica", "section": "Other EU", "mode": null, "visible": false, "bounds": [[40.2, -4.05], [40.65, -3.35]], "layers": [{"name": "fds:ZTLMadrid_PlazaEliptica", "label": "Plaza Eliptica", "kind": "polygon", "order": 0}]}, {"name": "other:ZTLBerlin_Umweltzone", "label": "Umweltzone", "section": "Other EU", "mode": null, "visible": false, "bounds": [[52.33, 13.05], [52.68, 13.78]], "layers": [{"name": "fds:ZTLBerlin_Umweltzone", "label": "Umweltzone", "kind": "polygon", "order": 0}]}];
+    var map = L.map("map", {
+      zoomControl: true
+    });
+    map.fitBounds([[41.76, 12.3], [42.03, 12.72]], {
+      padding: [28, 28]
+    });
+    map.createPane("basemapPane");
+    map.createPane("overlayPaneCustom");
+    map.getPane("basemapPane").style.zIndex = 100;
+    map.getPane("overlayPaneCustom").style.zIndex = 410;
+
+    var basemaps = {
+      osm: L.tileLayer.wms(geoserverUrl("/fds/wms"), {
+        layers: "fds:osm_openstreetmap",
+        format: "image/png",
+        version: "1.1.1",
+        cacheBust: "polygon_restore_1",
+        pane: "basemapPane",
+        attribution: "OpenStreetMap contributors"
+      }),
+      satellite: L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          crossOrigin: true,
+          detectRetina: false,
+          maxZoom: 19,
+          pane: "basemapPane",
+          attribution: "Tiles &copy; Esri"
+        }
+      )
+    };
+    var activeBasemap = basemaps.osm;
+    activeBasemap.addTo(map);
+
+    var overlays = {};
+    var groupsEl = document.getElementById("groups");
+    var groupRows = {};
+    var activeRomeMode = "Day";
+    var groupSections = {
+      "Rome:Day": document.getElementById("groups-rome-day"),
+      "Rome:Night": document.getElementById("groups-rome-night"),
+      "Rome:Out": document.getElementById("groups-rome-out"),
+      "Other EU": document.getElementById("groups-other-eu")
+    };
+
+    function layerTitle(name) {
+      return name.replace(/^fds:/, "");
+    }
+
+    function layerZIndex(kind) {
+      if (kind === "point") {
+        return 430;
+      }
+      if (kind === "line") {
+        return 420;
+      }
+      return 410;
+    }
+
+    function groupedLayersByKind(group) {
+      var byKind = {};
+      for (var i = 0; i < group.layers.length; i++) {
+        var layer = group.layers[i];
+        var kind = layer.kind || "polygon";
+        if (!byKind[kind]) {
+          byKind[kind] = [];
+        }
+        byKind[kind].push(layer.name);
+      }
+      return byKind;
+    }
+
+    function makeOverlays(group) {
+      var byKind = groupedLayersByKind(group);
+      var overlaysForGroup = [];
+      var kinds = ["polygon", "line", "point"];
+      for (var i = 0; i < kinds.length; i++) {
+        var kind = kinds[i];
+        if (!byKind[kind] || !byKind[kind].length) {
+          continue;
+        }
+        overlaysForGroup.push(L.tileLayer.wms(geoserverUrl("/fds/wms"), {
+          layers: byKind[kind].join(","),
+          styles: "",
+          transparent: true,
+          format: "image/png",
+          version: "1.1.1",
+          cacheBust: "polygon_restore_1",
+          pane: "overlayPaneCustom",
+          zIndex: layerZIndex(kind),
+          opacity: 0.82,
+          attribution: ""
+        }));
+      }
+      return overlaysForGroup;
+    }
+
+    function visibleLayerNames() {
+      var names = [];
+      for (var i = 0; i < layerGroups.length; i++) {
+        var group = layerGroups[i];
+        var groupOverlays = overlays[group.name] || [];
+        var visible = false;
+        for (var j = 0; j < groupOverlays.length; j++) {
+          if (map.hasLayer(groupOverlays[j])) {
+            visible = true;
+            break;
+          }
+        }
+        if (visible) {
+          for (var k = 0; k < group.layers.length; k++) {
+            if (names.indexOf(group.layers[k].name) === -1) {
+              names.push(group.layers[k].name);
+            }
+          }
+        }
+      }
+      return names;
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getFeatureInfoUrl(latlng, layerNames) {
+      var point = map.latLngToContainerPoint(latlng, map.getZoom());
+      var size = map.getSize();
+      var bounds = map.getBounds();
+      var sw = map.options.crs.project(bounds.getSouthWest());
+      var ne = map.options.crs.project(bounds.getNorthEast());
+      var params = {
+        service: "WMS",
+        version: "1.1.1",
+        request: "GetFeatureInfo",
+        layers: layerNames.join(","),
+        query_layers: layerNames.join(","),
+        styles: "",
+        bbox: [sw.x, sw.y, ne.x, ne.y].join(","),
+        width: size.x,
+        height: size.y,
+        srs: "EPSG:3857",
+        x: Math.round(point.x),
+        y: Math.round(point.y),
+        info_format: "application/json",
+        feature_count: 20,
+        buffer: 10
+      };
+      return geoserverUrl("/fds/wms") + L.Util.getParamString(params, geoserverUrl("/fds/wms"), true);
+    }
+
+    function featureTitle(feature, index) {
+      var id = feature.id || "";
+      if (id.indexOf(".") > -1) {
+        return id.split(".")[0];
+      }
+      return "Feature " + (index + 1);
+    }
+
+    function renderFeatureInfo(data) {
+      var features = data && data.features ? data.features : [];
+      if (!features.length) {
+        return '<div class="feature-popup"><h3>No feature found</h3></div>';
+      }
+
+      var html = '<div class="feature-popup"><h3>' + features.length + ' feature' + (features.length === 1 ? '' : 's') + '</h3>';
+      for (var i = 0; i < features.length; i++) {
+        var feature = features[i];
+        var props = feature.properties || {};
+        html += '<h4>' + escapeHtml(featureTitle(feature, i)) + '</h4><table>';
+        var keys = Object.keys(props);
+        if (!keys.length) {
+          html += '<tr><td>No attributes</td></tr>';
+        }
+        for (var k = 0; k < keys.length; k++) {
+          var key = keys[k];
+          html += '<tr><th>' + escapeHtml(key) + '</th><td>' + escapeHtml(props[key]) + '</td></tr>';
+        }
+        html += '</table>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    map.on("click", function (event) {
+      var layerNames = visibleLayerNames();
+      if (!layerNames.length) {
+        L.popup()
+          .setLatLng(event.latlng)
+          .setContent('<div class="feature-popup"><h3>No visible query layers</h3></div>')
+          .openOn(map);
+        return;
+      }
+
+      var popup = L.popup()
+        .setLatLng(event.latlng)
+        .setContent('<div class="feature-popup"><h3>Loading feature info...</h3></div>')
+        .openOn(map);
+
+      fetch(getFeatureInfoUrl(event.latlng, layerNames), { credentials: "same-origin" })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error("GetFeatureInfo failed: HTTP " + response.status);
+          }
+          return response.json();
+        })
+        .then(function (data) {
+          popup.setContent(renderFeatureInfo(data));
+        })
+        .catch(function (error) {
+          popup.setContent('<div class="feature-popup"><h3>Feature info error</h3><div>' + escapeHtml(error.message) + '</div></div>');
+        });
+    });
+
+    function addGroupControl(group) {
+      var row = document.createElement("div");
+      row.className = "group";
+      row.setAttribute("data-section", group.section || "Rome");
+      if (group.mode) {
+        row.setAttribute("data-mode", group.mode);
+      }
+      groupRows[group.name] = row;
+
+      var label = document.createElement("label");
+      label.className = "group-label";
+
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = group.visible !== false;
+      checkbox.setAttribute("data-group", group.name);
+
+      var name = document.createElement("span");
+      name.className = "group-name";
+      name.title = group.name;
+      name.appendChild(document.createTextNode(group.label));
+
+      var count = document.createElement("span");
+      count.className = "count";
+      count.appendChild(document.createTextNode(group.layers.length));
+
+      label.appendChild(checkbox);
+      label.appendChild(name);
+      label.appendChild(count);
+      row.appendChild(label);
+
+      var details = document.createElement("details");
+      var summary = document.createElement("summary");
+      summary.appendChild(document.createTextNode("Layers"));
+      details.appendChild(summary);
+
+      var list = document.createElement("ul");
+      list.className = "layer-list";
+      for (var i = 0; i < group.layers.length; i++) {
+        var item = document.createElement("li");
+        item.title = layerTitle(group.layers[i].name);
+        item.appendChild(document.createTextNode(group.layers[i].label));
+        list.appendChild(item);
+      }
+      details.appendChild(list);
+      row.appendChild(details);
+      var sectionKey = group.section === "Rome" ? "Rome:" + group.mode : group.section;
+      groupSections[sectionKey].appendChild(row);
+
+      checkbox.onchange = function () {
+        var groupOverlays = overlays[group.name] || [];
+        if (checkbox.checked) {
+          for (var i = 0; i < groupOverlays.length; i++) {
+            groupOverlays[i].addTo(map);
+          }
+          if (group.section === "Other EU" && group.bounds) {
+            map.fitBounds(group.bounds, { padding: [28, 28] });
+          }
+        } else {
+          for (var j = 0; j < groupOverlays.length; j++) {
+            map.removeLayer(groupOverlays[j]);
+          }
+        }
+      };
+    }
+
+    function setGroupVisible(group, visible) {
+      var groupOverlays = overlays[group.name] || [];
+      var row = groupRows[group.name];
+      var checkbox = row ? row.querySelector("input[type=checkbox]") : null;
+      if (checkbox) {
+        checkbox.checked = visible;
+      }
+      for (var i = 0; i < groupOverlays.length; i++) {
+        if (visible && !map.hasLayer(groupOverlays[i])) {
+          groupOverlays[i].addTo(map);
+        }
+        if (!visible && map.hasLayer(groupOverlays[i])) {
+          map.removeLayer(groupOverlays[i]);
+        }
+      }
+    }
+
+    function setRomeMode(mode) {
+      activeRomeMode = mode;
+      var buttons = document.querySelectorAll("[data-rome-mode]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.toggle("active", buttons[i].getAttribute("data-rome-mode") === mode);
+      }
+      document.getElementById("mode-box-day").classList.toggle("active", mode === "Day");
+      document.getElementById("mode-box-night").classList.toggle("active", mode === "Night");
+      for (var j = 0; j < layerGroups.length; j++) {
+        var group = layerGroups[j];
+        if (group.section !== "Rome" || group.mode === "Out") {
+          continue;
+        }
+        setGroupVisible(group, group.mode === mode);
+      }
+    }
+
+    function setBasemap(name) {
+      if (!basemaps[name] || basemaps[name] === activeBasemap) {
+        return;
+      }
+      map.removeLayer(activeBasemap);
+      activeBasemap = basemaps[name];
+      activeBasemap.addTo(map);
+      var buttons = document.querySelectorAll("[data-basemap]");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.toggle("active", buttons[i].getAttribute("data-basemap") === name);
+      }
+    }
+
+    for (var i = 0; i < layerGroups.length; i++) {
+      var group = layerGroups[i];
+      var groupOverlays = makeOverlays(group);
+      overlays[group.name] = groupOverlays;
+      if (group.visible !== false) {
+        for (var j = 0; j < groupOverlays.length; j++) {
+          groupOverlays[j].addTo(map);
+        }
+      }
+      addGroupControl(group);
+    }
+    setRomeMode(activeRomeMode);
+
+    var modeButtons = document.querySelectorAll("[data-rome-mode]");
+    for (var i = 0; i < modeButtons.length; i++) {
+      modeButtons[i].onclick = function () {
+        setRomeMode(this.getAttribute("data-rome-mode"));
+      };
+    }
+
+    var basemapButtons = document.querySelectorAll("[data-basemap]");
+    for (var i = 0; i < basemapButtons.length; i++) {
+      basemapButtons[i].onclick = function () {
+        setBasemap(this.getAttribute("data-basemap"));
+      };
+    }
+
+    document.getElementById("panel-toggle").onclick = function () {
+      var panel = document.querySelector(".panel");
+      var collapsed = panel.classList.toggle("collapsed");
+      this.textContent = collapsed ? "Show" : "Hide";
+      setTimeout(function () { map.invalidateSize(); }, 0);
+    };
+  </script>
+</body>
+</html>

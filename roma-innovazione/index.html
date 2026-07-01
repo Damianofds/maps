@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Roma Innovazione</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #667085;
+      --teal: #0f766e;
+      --violet: #6d28d9;
+      --paper: rgba(255, 255, 255, 0.95);
+      --table-bar-height: 48px;
+      --table-height: min(42vh, 390px);
+    }
+    html, body, #map { height: 100%; margin: 0; width: 100%; }
+    body {
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+    #map { background: #e9eef3; }
+    .panel, .legend {
+      backdrop-filter: blur(14px);
+      background: var(--paper);
+      border: 1px solid rgba(23, 32, 51, 0.12);
+      border-radius: 16px;
+      box-shadow: 0 16px 44px rgba(23, 32, 51, 0.18);
+      position: absolute;
+      z-index: 1005;
+    }
+    .panel {
+      left: 18px;
+      overflow: hidden;
+      top: 18px;
+      width: 330px;
+    }
+    .hero {
+      background:
+        radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.26), transparent 36%),
+        linear-gradient(135deg, #172033 0%, #312e81 100%);
+      color: white;
+      padding: 21px 22px 18px;
+    }
+    .eyebrow {
+      color: #99f6e4;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    h1 { font-size: 23px; letter-spacing: -0.035em; line-height: 1.05; margin: 8px 0 7px; }
+    .hero p { color: #d8d9ff; font-size: 12px; line-height: 1.45; margin: 0; }
+    .controls { padding: 14px; }
+    .control-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      margin: 0 0 7px;
+      text-transform: uppercase;
+    }
+    .segmented { display: grid; gap: 6px; grid-template-columns: 1fr 1fr; }
+    button {
+      background: #fff;
+      border: 1px solid #d0d5dd;
+      border-radius: 9px;
+      color: #344054;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      padding: 8px 10px;
+    }
+    button:hover { background: #f8fafc; }
+    button.active { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 700; }
+    .layer-card {
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
+      display: flex;
+      gap: 11px;
+      margin-top: 14px;
+      padding: 12px;
+    }
+    .layer-card input { accent-color: var(--violet); height: 17px; width: 17px; }
+    .layer-copy { min-width: 0; }
+    .layer-name { font-size: 13px; font-weight: 800; }
+    .layer-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .status {
+      align-items: center;
+      color: var(--muted);
+      display: flex;
+      font-size: 11px;
+      gap: 7px;
+      margin-top: 12px;
+    }
+    .status-dot { background: #12b76a; border-radius: 50%; height: 7px; width: 7px; }
+    .legend {
+      bottom: calc(var(--table-bar-height) + 14px);
+      padding: 13px 15px;
+      right: 14px;
+      transition: bottom 180ms ease;
+      width: 190px;
+    }
+    body.table-expanded .legend { bottom: calc(var(--table-height) + 14px); }
+    .legend-title { font-size: 12px; font-weight: 800; margin-bottom: 10px; }
+    .legend-row { align-items: center; display: flex; font-size: 11px; gap: 10px; margin: 8px 0; }
+    .symbol { align-items: center; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 6px rgba(23,32,51,.3); display: flex; flex: 0 0 auto; justify-content: center; }
+    .symbol.point { background: var(--teal); height: 13px; width: 13px; }
+    .symbol.cluster { background: var(--violet); color: #fff; font-size: 9px; font-weight: 800; height: 25px; width: 25px; }
+    .feature-popup { max-height: 360px; max-width: 380px; min-width: 260px; overflow: auto; }
+    .feature-popup h3 { font-size: 15px; margin: 0 0 5px; }
+    .feature-popup .sector { color: var(--violet); font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+    .feature-popup dl { font-size: 11px; margin: 0; }
+    .feature-popup dt { color: var(--muted); font-weight: 700; margin-top: 7px; }
+    .feature-popup dd { line-height: 1.4; margin: 2px 0 0; overflow-wrap: anywhere; }
+    .feature-popup a { color: var(--teal); }
+    .cluster-popup { text-align: center; }
+    .cluster-popup strong { color: var(--violet); font-size: 24px; }
+    .cluster-results { margin-top: 12px; text-align: left; }
+    .company-result {
+      border-top: 1px solid #e4e7ec;
+      padding: 8px 2px;
+    }
+    .company-result summary {
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .company-result .company-body { padding: 3px 0 2px 14px; }
+    .leaflet-control-zoom { border: 0 !important; box-shadow: 0 8px 24px rgba(23,32,51,.16) !important; }
+    .leaflet-control-zoom a { border-color: #e4e7ec !important; }
+    .feature-table {
+      background: rgba(255, 255, 255, 0.98);
+      border-top: 1px solid #d0d5dd;
+      bottom: 0;
+      box-shadow: 0 -12px 32px rgba(23, 32, 51, 0.14);
+      height: var(--table-bar-height);
+      left: 0;
+      overflow: hidden;
+      position: fixed;
+      right: 0;
+      transition: height 180ms ease;
+      z-index: 1010;
+    }
+    .feature-table.expanded { height: var(--table-height); }
+    .table-toolbar {
+      align-items: center;
+      background: #fff;
+      border-bottom: 1px solid #e4e7ec;
+      box-sizing: border-box;
+      display: flex;
+      gap: 10px;
+      height: var(--table-bar-height);
+      padding: 7px 12px;
+    }
+    .table-toggle {
+      align-items: center;
+      border: 0;
+      display: flex;
+      font-size: 13px;
+      font-weight: 800;
+      gap: 8px;
+      padding: 7px 8px;
+    }
+    .table-toggle:hover { background: #f2f4f7; }
+    .table-chevron { display: inline-block; transition: transform 180ms ease; }
+    .feature-table.expanded .table-chevron { transform: rotate(180deg); }
+    .table-count {
+      background: #f2f4f7;
+      border-radius: 999px;
+      color: #475467;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      white-space: nowrap;
+    }
+    .table-search {
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font: inherit;
+      font-size: 12px;
+      margin-left: auto;
+      max-width: 320px;
+      min-width: 150px;
+      padding: 7px 10px;
+      width: 26vw;
+    }
+    .field-picker { position: relative; }
+    .field-picker > summary {
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      color: #344054;
+      cursor: pointer;
+      font-size: 12px;
+      list-style: none;
+      padding: 7px 10px;
+      white-space: nowrap;
+    }
+    .field-picker > summary::-webkit-details-marker { display: none; }
+    .field-options {
+      background: #fff;
+      border: 1px solid #d0d5dd;
+      border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(23, 32, 51, 0.18);
+      max-height: 230px;
+      min-width: 210px;
+      overflow: auto;
+      padding: 8px;
+      position: absolute;
+      right: 0;
+      top: 38px;
+      z-index: 2;
+    }
+    .field-options label {
+      align-items: center;
+      display: flex;
+      font-size: 12px;
+      gap: 8px;
+      padding: 5px 4px;
+    }
+    .field-options input { accent-color: var(--violet); }
+    .table-scroll {
+      height: calc(100% - var(--table-bar-height));
+      overflow: auto;
+    }
+    .records-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 12px;
+      min-width: 100%;
+      width: max-content;
+    }
+    .records-table th, .records-table td {
+      border-bottom: 1px solid #eaecf0;
+      max-width: 360px;
+      overflow: hidden;
+      padding: 9px 12px;
+      text-align: left;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .records-table th {
+      background: #f8fafc;
+      color: #475467;
+      cursor: pointer;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      position: sticky;
+      text-transform: uppercase;
+      top: 0;
+      user-select: none;
+      z-index: 1;
+    }
+    .records-table th:hover { background: #f2f4f7; color: var(--ink); }
+    .records-table th.sorted { color: var(--violet); }
+    .records-table tbody tr:hover { background: #f8fafc; }
+    .records-table a { color: var(--teal); }
+    .table-message { color: var(--muted); padding: 28px; text-align: center; }
+    @media (max-width: 620px) {
+      .panel { left: 9px; top: 9px; width: calc(100vw - 18px); }
+      .hero { padding: 15px 17px 13px; }
+      h1 { font-size: 19px; }
+      .controls { padding: 10px; }
+      .legend { display: none; }
+      .table-toolbar { gap: 5px; padding: 7px 6px; }
+      .table-search { flex: 1; margin-left: 0; min-width: 80px; width: auto; }
+      .table-count { display: none; }
+      .field-picker > summary { padding: 7px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <aside class="panel">
+    <div class="hero">
+      <div class="eyebrow">Tecnopolo &middot; Roma</div>
+      <h1>Roma Innovazione</h1>
+      <p>Companies and technology organisations across Rome’s innovation ecosystem.</p>
+    </div>
+    <div class="controls">
+      <div class="control-label">Background</div>
+      <div class="segmented">
+        <button class="active" type="button" data-basemap="osm">OpenStreetMap</button>
+        <button type="button" data-basemap="satellite">Satellite</button>
+      </div>
+      <label class="layer-card">
+        <input id="companies-toggle" type="checkbox" checked>
+        <span class="layer-copy">
+          <span class="layer-name">Innovation companies</span>
+          <span class="layer-meta">Tecnopolo + LVenture portfolio &middot; clustered</span>
+        </span>
+      </label>
+      <div class="status"><span class="status-dot"></span><span id="status-text">Layer ready</span></div>
+    </div>
+  </aside>
+  <aside class="legend">
+    <div class="legend-title">Innovation locations</div>
+    <div class="legend-row"><span class="symbol point"></span><span>Single company</span></div>
+    <div class="legend-row"><span class="symbol cluster">8</span><span>Nearby companies</span></div>
+  </aside>
+  <section class="feature-table" id="feature-table" aria-label="Features in the current map view">
+    <div class="table-toolbar">
+      <button class="table-toggle" id="table-toggle" type="button" aria-expanded="false" aria-controls="table-content">
+        <span class="table-chevron">â²</span>
+        <span>Feature table</span>
+      </button>
+      <span class="table-count" id="table-count">Loading visible recordsâ¦</span>
+      <input class="table-search" id="table-search" type="search" placeholder="Search visible recordsâ¦" aria-label="Search visible records">
+      <details class="field-picker" id="field-picker">
+        <summary>Search fields</summary>
+        <div class="field-options" id="field-options"></div>
+      </details>
+    </div>
+    <div class="table-scroll" id="table-content">
+      <div class="table-message" id="table-message">Loading visible recordsâ¦</div>
+      <table class="records-table" id="records-table" hidden>
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script src="../assets/config.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    var GEOSERVER_BASE = ((window.MAPS_CONFIG && window.MAPS_CONFIG.geoserverBase) || "/geoserver").replace(/\/+$/, "");
+    function geoserverUrl(path) {
+      return GEOSERVER_BASE + path;
+    }
+
+    var LAYER = "fds:tecnopolo_companies";
+    var map = L.map("map", { zoomControl: true, preferCanvas: true });
+    map.fitBounds([[41.70, 12.43], [41.95, 12.65]], { padding: [34, 34] });
+
+    var basemaps = {
+      osm: L.tileLayer.wms(geoserverUrl("/fds/wms"), {
+        layers: "fds:osm_openstreetmap",
+        format: "image/png",
+        version: "1.1.1",
+        attribution: "OpenStreetMap contributors"
+      }),
+      satellite: L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: "Tiles &copy; Esri" }
+      )
+    };
+    var activeBasemap = basemaps.osm.addTo(map);
+    var companyOverlay = null;
+    var overlayRequest = 0;
+    var layerVisible = true;
+    var visibleFeatures = [];
+    var tableColumns = [];
+    var selectedSearchFields = [];
+    var tableSort = { key: null, direction: "asc" };
+    var tableRequest = 0;
+    var tableAbortController = null;
+    var preferredColumns = ["name", "sector", "descriptio", "description", "sede", "website"];
+    var hiddenTableColumns = {
+      main_addr: true,
+      other_addr: true,
+      latitude: true,
+      longitude: true
+    };
+
+    function projectedView() {
+      var bounds = map.getBounds();
+      var sw = map.options.crs.project(bounds.getSouthWest());
+      var ne = map.options.crs.project(bounds.getNorthEast());
+      var size = map.getSize();
+      return {
+        bounds: bounds,
+        bbox: [sw.x, sw.y, ne.x, ne.y].join(","),
+        width: Math.max(1, Math.round(size.x)),
+        height: Math.max(1, Math.round(size.y))
+      };
+    }
+
+    function wmsUrl(request, extra) {
+      var view = projectedView();
+      var params = {
+        service: "WMS",
+        version: "1.1.1",
+        request: request,
+        layers: LAYER,
+        styles: "",
+        srs: "EPSG:3857",
+        bbox: view.bbox,
+        width: view.width,
+        height: view.height,
+        format: "image/png",
+        transparent: "true"
+      };
+      Object.keys(extra || {}).forEach(function (key) { params[key] = extra[key]; });
+      return geoserverUrl("/fds/wms") + L.Util.getParamString(params, geoserverUrl("/fds/wms"), true);
+    }
+
+    function refreshCompanies() {
+      if (!layerVisible) return;
+      var requestId = ++overlayRequest;
+      var view = projectedView();
+      var image = new Image();
+      var url = wmsUrl("GetMap", { _ts: Date.now() });
+      document.getElementById("status-text").textContent = "Updating clustersâ¦";
+      image.onload = function () {
+        if (requestId !== overlayRequest || !layerVisible) return;
+        var next = L.imageOverlay(url, view.bounds, { opacity: 0.96, interactive: false });
+        next.addTo(map);
+        if (companyOverlay) map.removeLayer(companyOverlay);
+        companyOverlay = next;
+        document.getElementById("status-text").textContent = "Layer ready";
+      };
+      image.onerror = function () {
+        if (requestId === overlayRequest) document.getElementById("status-text").textContent = "Layer failed to load";
+      };
+      image.src = url;
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function websiteLink(value) {
+      if (!value) return "â";
+      var href = /^https?:\/\//i.test(value) ? value : "https://" + value;
+      return '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener">Visit website</a>';
+    }
+
+    function companyDetails(properties) {
+      var p = properties || {};
+      return '<div class="sector">' + escapeHtml(p.sector || "Innovation company") + '</div><dl>' +
+        '<dt>Description</dt><dd>' + escapeHtml(p.descriptio || p.description || "â") + '</dd>' +
+        '<dt>Location</dt><dd>' + escapeHtml(p.main_addr || "â") + '</dd>' +
+        '<dt>Tecnopolo site</dt><dd>' + escapeHtml(p.sede || "â") + '</dd>' +
+        '<dt>Website</dt><dd>' + websiteLink(p.website) + '</dd></dl>';
+    }
+
+    function popupContent(feature) {
+      var p = feature.properties || {};
+      return '<div class="feature-popup"><h3>' + escapeHtml(p.name || "Tecnopolo company") + '</h3>' +
+        companyDetails(p) + '</div>';
+    }
+
+    function parseStackBounds(value) {
+      var match = String(value || "").match(
+        /Env\[\s*([-+0-9.eE]+)\s*:\s*([-+0-9.eE]+)\s*,\s*([-+0-9.eE]+)\s*:\s*([-+0-9.eE]+)\s*\]/
+      );
+      if (!match) return null;
+      var minX = Number(match[1]);
+      var maxX = Number(match[2]);
+      var minY = Number(match[3]);
+      var maxY = Number(match[4]);
+      var epsilon = 0.00000001;
+      return [minX - epsilon, minY - epsilon, maxX + epsilon, maxY + epsilon];
+    }
+
+    function clusterMembersUrl(envBBOX) {
+      var bbox = parseStackBounds(envBBOX);
+      if (!bbox) return null;
+      var params = {
+        service: "WFS",
+        version: "2.0.0",
+        request: "GetFeature",
+        typeNames: LAYER,
+        outputFormat: "application/json",
+        srsName: "EPSG:4326",
+        bbox: bbox.join(",") + ",EPSG:4326",
+        count: 500
+      };
+      return geoserverUrl("/fds/ows") + L.Util.getParamString(params, geoserverUrl("/fds/ows"), true);
+    }
+
+    function visibleFeaturesUrl() {
+      var bounds = map.getBounds();
+      var params = {
+        service: "WFS",
+        version: "2.0.0",
+        request: "GetFeature",
+        typeNames: LAYER,
+        outputFormat: "application/json",
+        srsName: "EPSG:4326",
+        bbox: [
+          bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth(), "EPSG:4326"
+        ].join(","),
+        count: 5000
+      };
+      return geoserverUrl("/fds/ows") + L.Util.getParamString(params, geoserverUrl("/fds/ows"), true);
+    }
+
+    function displayColumnName(key) {
+      var labels = {
+        name: "Name",
+        sector: "Sector",
+        descriptio: "Description",
+        description: "Description",
+        main_addr: "Address",
+        sede: "Tecnopolo site",
+        website: "Website"
+      };
+      return labels[key] || key.replace(/_/g, " ").replace(/\b\w/g, function (letter) {
+        return letter.toUpperCase();
+      });
+    }
+
+    function collectColumns(features) {
+      var found = {};
+      features.forEach(function (feature) {
+        Object.keys(feature.properties || {}).forEach(function (key) {
+          if (!hiddenTableColumns[key]) found[key] = true;
+        });
+      });
+      var columns = [];
+      preferredColumns.forEach(function (key) {
+        if (found[key] && columns.indexOf(key) === -1) columns.push(key);
+      });
+      Object.keys(found).sort().forEach(function (key) {
+        if (columns.indexOf(key) === -1) columns.push(key);
+      });
+      return columns;
+    }
+
+    function updateSearchFieldOptions() {
+      var options = document.getElementById("field-options");
+      var previous = selectedSearchFields.slice();
+      if (!previous.length) selectedSearchFields = tableColumns.slice();
+      else selectedSearchFields = previous.filter(function (key) { return tableColumns.indexOf(key) !== -1; });
+      if (!selectedSearchFields.length) selectedSearchFields = tableColumns.slice();
+      options.innerHTML = tableColumns.map(function (key) {
+        return '<label><input type="checkbox" value="' + escapeHtml(key) + '"' +
+          (selectedSearchFields.indexOf(key) !== -1 ? " checked" : "") + "> " +
+          escapeHtml(displayColumnName(key)) + "</label>";
+      }).join("");
+      options.querySelectorAll("input").forEach(function (input) {
+        input.onchange = function () {
+          selectedSearchFields = Array.prototype.slice.call(options.querySelectorAll("input:checked"))
+            .map(function (item) { return item.value; });
+          if (!selectedSearchFields.length) {
+            this.checked = true;
+            selectedSearchFields = [this.value];
+          }
+          renderFeatureTable();
+        };
+      });
+    }
+
+    function compareTableValues(a, b) {
+      var aEmpty = a == null || a === "";
+      var bEmpty = b == null || b === "";
+      if (aEmpty || bEmpty) return aEmpty === bEmpty ? 0 : (aEmpty ? 1 : -1);
+      var aNumber = Number(a);
+      var bNumber = Number(b);
+      if (!isNaN(aNumber) && !isNaN(bNumber)) return aNumber - bNumber;
+      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+    }
+
+    function tableCell(key, value) {
+      if (key === "website" && value) {
+        var href = /^https?:\/\//i.test(value) ? value : "https://" + value;
+        return '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener">' +
+          escapeHtml(value) + '</a>';
+      }
+      return escapeHtml(value == null || value === "" ? "â" : value);
+    }
+
+    function renderFeatureTable() {
+      var query = document.getElementById("table-search").value.trim().toLocaleLowerCase();
+      var fields = selectedSearchFields.length ? selectedSearchFields : tableColumns;
+      var filtered = visibleFeatures.filter(function (feature) {
+        if (!query) return true;
+        var properties = feature.properties || {};
+        return fields.some(function (key) {
+          return String(properties[key] == null ? "" : properties[key]).toLocaleLowerCase().indexOf(query) !== -1;
+        });
+      });
+      if (tableSort.key) {
+        filtered.sort(function (a, b) {
+          var result = compareTableValues((a.properties || {})[tableSort.key], (b.properties || {})[tableSort.key]);
+          return tableSort.direction === "asc" ? result : -result;
+        });
+      }
+
+      var count = document.getElementById("table-count");
+      count.textContent = query
+        ? filtered.length + " of " + visibleFeatures.length + " visible records"
+        : visibleFeatures.length + " visible record" + (visibleFeatures.length === 1 ? "" : "s");
+
+      var table = document.getElementById("records-table");
+      var message = document.getElementById("table-message");
+      if (!tableColumns.length || !filtered.length) {
+        table.hidden = true;
+        message.hidden = false;
+        message.textContent = visibleFeatures.length ? "No records match this search." : "No records in the current map view.";
+        return;
+      }
+
+      table.querySelector("thead").innerHTML = "<tr>" + tableColumns.map(function (key) {
+        var sorted = tableSort.key === key;
+        var arrow = sorted ? (tableSort.direction === "asc" ? " â²" : " â¼") : "";
+        return '<th scope="col" data-column="' + escapeHtml(key) + '" class="' + (sorted ? "sorted" : "") +
+          '" aria-sort="' + (sorted ? (tableSort.direction === "asc" ? "ascending" : "descending") : "none") +
+          '">' + escapeHtml(displayColumnName(key)) + arrow + "</th>";
+      }).join("") + "</tr>";
+      table.querySelector("tbody").innerHTML = filtered.map(function (feature) {
+        var properties = feature.properties || {};
+        return "<tr>" + tableColumns.map(function (key) {
+          var raw = properties[key];
+          return '<td title="' + escapeHtml(raw == null ? "" : raw) + '">' + tableCell(key, raw) + "</td>";
+        }).join("") + "</tr>";
+      }).join("");
+      table.querySelectorAll("th").forEach(function (header) {
+        header.onclick = function () {
+          var key = this.getAttribute("data-column");
+          if (tableSort.key === key) tableSort.direction = tableSort.direction === "asc" ? "desc" : "asc";
+          else tableSort = { key: key, direction: "asc" };
+          renderFeatureTable();
+        };
+      });
+      message.hidden = true;
+      table.hidden = false;
+    }
+
+    function refreshFeatureTable() {
+      if (!layerVisible) return;
+      var requestId = ++tableRequest;
+      if (tableAbortController) tableAbortController.abort();
+      tableAbortController = typeof AbortController === "undefined" ? null : new AbortController();
+      document.getElementById("table-count").textContent = "Updating visible recordsâ¦";
+      fetch(visibleFeaturesUrl(), {
+        credentials: "same-origin",
+        signal: tableAbortController ? tableAbortController.signal : undefined
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error("WFS HTTP " + response.status);
+          return response.json();
+        })
+        .then(function (data) {
+          if (requestId !== tableRequest) return;
+          visibleFeatures = data.features || [];
+          var nextColumns = collectColumns(visibleFeatures);
+          if (nextColumns.join("|") !== tableColumns.join("|")) {
+            tableColumns = nextColumns;
+            updateSearchFieldOptions();
+          }
+          renderFeatureTable();
+        })
+        .catch(function (error) {
+          if (error.name === "AbortError" || requestId !== tableRequest) return;
+          visibleFeatures = [];
+          tableColumns = [];
+          document.getElementById("records-table").hidden = true;
+          document.getElementById("table-message").hidden = false;
+          document.getElementById("table-message").textContent = "Could not load records for this map view.";
+          document.getElementById("table-count").textContent = "Table unavailable";
+        });
+    }
+
+    function refreshViewport() {
+      refreshCompanies();
+      refreshFeatureTable();
+    }
+
+    function clusterPopupContent(features, expectedCount) {
+      var sorted = features.slice().sort(function (a, b) {
+        return String(a.properties.name || "").localeCompare(String(b.properties.name || ""));
+      });
+      var html = '<div class="feature-popup cluster-popup"><strong>' + escapeHtml(sorted.length || expectedCount) +
+        '</strong><h3>companies in this cluster</h3>' +
+        '<div>All companies are listed below, including locations sharing the exact same coordinates.</div>' +
+        '<div class="cluster-results">';
+      for (var i = 0; i < sorted.length; i++) {
+        var p = sorted[i].properties || {};
+        html += '<details class="company-result"' + (i === 0 ? " open" : "") + '><summary>' +
+          escapeHtml(p.name || "Tecnopolo company") + '</summary><div class="company-body">' +
+          companyDetails(p) + '</div></details>';
+      }
+      return html + '</div></div>';
+    }
+
+    map.on("moveend resize", refreshViewport);
+    map.on("click", function (event) {
+      if (!layerVisible) return;
+      var view = projectedView();
+      var point = map.latLngToContainerPoint(event.latlng);
+      var url = wmsUrl("GetFeatureInfo", {
+        query_layers: LAYER,
+        info_format: "application/json",
+        feature_count: 10,
+        buffer: 14,
+        x: Math.round(point.x),
+        y: Math.round(point.y)
+      });
+      var popup = L.popup().setLatLng(event.latlng).setContent("Loadingâ¦").openOn(map);
+      fetch(url, { credentials: "same-origin" })
+        .then(function (response) {
+          if (!response.ok) throw new Error("HTTP " + response.status);
+          return response.json();
+        })
+        .then(function (data) {
+          var features = data.features || [];
+          if (!features.length) {
+            popup.setContent("No company found here.");
+            return;
+          }
+          var selected = features[0];
+          var properties = selected.properties || {};
+          if (Number(properties.count) <= 1) {
+            popup.setContent(popupContent(selected));
+            return;
+          }
+          var membersUrl = clusterMembersUrl(properties.envBBOX);
+          if (!membersUrl) {
+            throw new Error("The cluster bounds are unavailable.");
+          }
+          popup.setContent(
+            '<div class="feature-popup cluster-popup"><strong>' + escapeHtml(properties.count) +
+            '</strong><h3>Loading companiesâ¦</h3></div>'
+          );
+          return fetch(membersUrl, { credentials: "same-origin" })
+            .then(function (response) {
+              if (!response.ok) throw new Error("WFS HTTP " + response.status);
+              return response.json();
+            })
+            .then(function (members) {
+              popup.setContent(clusterPopupContent(members.features || [], properties.count));
+            });
+        })
+        .catch(function () { popup.setContent("Could not load company information."); });
+    });
+
+    document.getElementById("companies-toggle").onchange = function () {
+      layerVisible = this.checked;
+      if (!layerVisible) {
+        if (companyOverlay) {
+          map.removeLayer(companyOverlay);
+          companyOverlay = null;
+        }
+        tableRequest++;
+        if (tableAbortController) tableAbortController.abort();
+        visibleFeatures = [];
+        renderFeatureTable();
+        document.getElementById("status-text").textContent = "Layer hidden";
+      } else {
+        refreshViewport();
+      }
+    };
+
+    document.querySelectorAll("[data-basemap]").forEach(function (button) {
+      button.onclick = function () {
+        var name = this.getAttribute("data-basemap");
+        if (basemaps[name] === activeBasemap) return;
+        map.removeLayer(activeBasemap);
+        activeBasemap = basemaps[name].addTo(map);
+        document.querySelectorAll("[data-basemap]").forEach(function (item) {
+          item.classList.toggle("active", item === button);
+        });
+      };
+    });
+
+    document.getElementById("table-toggle").onclick = function () {
+      var table = document.getElementById("feature-table");
+      var expanded = table.classList.toggle("expanded");
+      document.body.classList.toggle("table-expanded", expanded);
+      this.setAttribute("aria-expanded", String(expanded));
+    };
+    document.getElementById("table-search").oninput = renderFeatureTable;
+
+    refreshViewport();
+  </script>
+</body>
+</html>
