@@ -37,13 +37,18 @@
       top: 18px;
       width: 330px;
     }
+    .panel.collapsed .controls { display: none; }
     .hero {
       background:
         radial-gradient(circle at 88% 10%, rgba(20, 184, 166, 0.26), transparent 36%),
         linear-gradient(135deg, #172033 0%, #312e81 100%);
       color: white;
+      display: grid;
+      gap: 7px 12px;
+      grid-template-columns: 1fr auto;
       padding: 21px 22px 18px;
     }
+    .hero-copy { min-width: 0; }
     .eyebrow {
       color: #99f6e4;
       font-size: 10px;
@@ -53,6 +58,22 @@
     }
     h1 { font-size: 23px; letter-spacing: -0.035em; line-height: 1.05; margin: 8px 0 7px; }
     .hero p { color: #d8d9ff; font-size: 12px; line-height: 1.45; margin: 0; }
+    .panel-toggle {
+      align-items: center;
+      align-self: start;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.24);
+      color: #fff;
+      display: flex;
+      font-size: 11px;
+      font-weight: 800;
+      gap: 6px;
+      padding: 7px 9px;
+      white-space: nowrap;
+    }
+    .panel-toggle:hover { background: rgba(255, 255, 255, 0.2); }
+    .panel-chevron { display: inline-block; transition: transform 180ms ease; }
+    .panel.collapsed .panel-chevron { transform: rotate(180deg); }
     .controls { padding: 14px; }
     .control-label {
       color: var(--muted);
@@ -311,6 +332,7 @@
       .panel { left: 9px; top: 9px; width: calc(100vw - 18px); }
       .hero { padding: 15px 17px 13px; }
       h1 { font-size: 19px; }
+      .panel.collapsed .hero p { display: none; }
       .controls { padding: 10px; }
       .legend { display: none; }
       .table-toolbar { gap: 5px; padding: 7px 6px; }
@@ -324,11 +346,17 @@
   <div id="map"></div>
   <aside class="panel">
     <div class="hero">
-      <div class="eyebrow">Tecnopolo &middot; Roma</div>
-      <h1>Roma Innovazione</h1>
-      <p>Aziende e organizzazioni tecnologiche nell'ecosistema dell'innovazione di Roma.</p>
+      <div class="hero-copy">
+        <div class="eyebrow">Tecnopolo &middot; Roma</div>
+        <h1>Roma Innovazione</h1>
+        <p>Aziende e organizzazioni tecnologiche nell'ecosistema dell'innovazione di Roma.</p>
+      </div>
+      <button class="panel-toggle" id="panel-toggle" type="button" aria-expanded="true" aria-controls="map-controls">
+        <span class="panel-chevron">&#9650;</span>
+        <span id="panel-toggle-label">Comprimi</span>
+      </button>
     </div>
-    <div class="controls">
+    <div class="controls" id="map-controls">
       <div class="control-label">Sfondo</div>
       <div class="segmented">
         <button class="active" type="button" data-basemap="osm">OpenStreetMap</button>
@@ -946,6 +974,31 @@
       this.setAttribute("aria-expanded", String(expanded));
     };
     document.getElementById("table-search").oninput = renderFeatureTable;
+
+    var panel = document.querySelector(".panel");
+    var panelToggle = document.getElementById("panel-toggle");
+    var panelToggleLabel = document.getElementById("panel-toggle-label");
+    var mobilePanelQuery = window.matchMedia("(max-width: 620px)");
+    var panelTouched = false;
+
+    function setPanelCollapsed(collapsed) {
+      panel.classList.toggle("collapsed", collapsed);
+      panelToggle.setAttribute("aria-expanded", String(!collapsed));
+      panelToggleLabel.textContent = collapsed ? "Espandi" : "Comprimi";
+      setTimeout(function () { map.invalidateSize(); }, 0);
+    }
+
+    panelToggle.onclick = function () {
+      panelTouched = true;
+      setPanelCollapsed(!panel.classList.contains("collapsed"));
+    };
+
+    setPanelCollapsed(mobilePanelQuery.matches);
+    if (typeof mobilePanelQuery.addEventListener === "function") {
+      mobilePanelQuery.addEventListener("change", function (event) {
+        if (!panelTouched) setPanelCollapsed(event.matches);
+      });
+    }
 
     loadSiteInventory();
   </script>
