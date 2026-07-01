@@ -76,19 +76,63 @@
     button:hover { background: #f8fafc; }
     button.active { background: var(--ink); border-color: var(--ink); color: #fff; font-weight: 700; }
     .layer-card {
-      align-items: center;
       background: #f8fafc;
       border: 1px solid #e4e7ec;
       border-radius: 12px;
-      display: flex;
-      gap: 11px;
       margin-top: 14px;
       padding: 12px;
     }
-    .layer-card input { accent-color: var(--violet); height: 17px; width: 17px; }
+    .layer-heading {
+      align-items: center;
+      display: flex;
+      gap: 11px;
+    }
+    .layer-card input { accent-color: var(--violet); flex: 0 0 auto; height: 17px; width: 17px; }
     .layer-copy { min-width: 0; }
     .layer-name { font-size: 13px; font-weight: 800; }
     .layer-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .site-tools {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 11px;
+    }
+    .site-tools button { border-radius: 8px; padding: 6px 8px; }
+    .site-list {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+      max-height: 168px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .site-row {
+      align-items: center;
+      background: #fff;
+      border: 1px solid #eaecf0;
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 17px 1fr auto;
+      min-height: 38px;
+      padding: 7px 8px;
+    }
+    .site-row.is-off { opacity: 0.58; }
+    .site-name {
+      font-size: 12px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .site-count {
+      background: #eef2ff;
+      border-radius: 999px;
+      color: #4338ca;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+    }
     .status {
       align-items: center;
       color: var(--muted);
@@ -290,13 +334,22 @@
         <button class="active" type="button" data-basemap="osm">OpenStreetMap</button>
         <button type="button" data-basemap="satellite">Satellite</button>
       </div>
-      <label class="layer-card">
-        <input id="companies-toggle" type="checkbox" checked>
-        <span class="layer-copy">
-          <span class="layer-name">Innovation companies</span>
-          <span class="layer-meta">Tecnopolo + LVenture portfolio &middot; clustered</span>
-        </span>
-      </label>
+      <section class="layer-card" aria-label="Tecnopolo site layers">
+        <label class="layer-heading">
+          <input id="companies-toggle" type="checkbox" checked>
+          <span class="layer-copy">
+            <span class="layer-name">Tecnopolo sites</span>
+            <span class="layer-meta" id="site-summary">Loading site layers...</span>
+          </span>
+        </label>
+        <div class="site-tools">
+          <button id="sites-select-all" type="button">All sites</button>
+          <button id="sites-clear" type="button">Clear</button>
+        </div>
+        <div class="site-list" id="site-list">
+          <div class="layer-meta">Loading site layers...</div>
+        </div>
+      </section>
       <div class="status"><span class="status-dot"></span><span id="status-text">Layer ready</span></div>
     </div>
   </aside>
@@ -308,18 +361,18 @@
   <section class="feature-table" id="feature-table" aria-label="Features in the current map view">
     <div class="table-toolbar">
       <button class="table-toggle" id="table-toggle" type="button" aria-expanded="false" aria-controls="table-content">
-        <span class="table-chevron">â²</span>
+        <span class="table-chevron">&#9650;</span>
         <span>Feature table</span>
       </button>
-      <span class="table-count" id="table-count">Loading visible recordsâ¦</span>
-      <input class="table-search" id="table-search" type="search" placeholder="Search visible recordsâ¦" aria-label="Search visible records">
+      <span class="table-count" id="table-count">Loading visible records...</span>
+      <input class="table-search" id="table-search" type="search" placeholder="Search visible records..." aria-label="Search visible records">
       <details class="field-picker" id="field-picker">
         <summary>Search fields</summary>
         <div class="field-options" id="field-options"></div>
       </details>
     </div>
     <div class="table-scroll" id="table-content">
-      <div class="table-message" id="table-message">Loading visible recordsâ¦</div>
+      <div class="table-message" id="table-message">Loading visible records...</div>
       <table class="records-table" id="records-table" hidden>
         <thead></thead>
         <tbody></tbody>
@@ -361,6 +414,8 @@
     var tableSort = { key: null, direction: "asc" };
     var tableRequest = 0;
     var tableAbortController = null;
+    var siteOptions = [];
+    var selectedSites = {};
     var preferredColumns = ["name", "sector", "descriptio", "description", "sede", "website"];
     var hiddenTableColumns = {
       main_addr: true,
@@ -382,9 +437,33 @@
       };
     }
 
+    function cqlLiteral(value) {
+      return "'" + String(value).replace(/'/g, "''") + "'";
+    }
+
+    function selectedSiteValues() {
+      return siteOptions
+        .map(function (site) { return site.name; })
+        .filter(function (name) { return selectedSites[name]; });
+    }
+
+    function activeSiteFilter() {
+      if (!siteOptions.length) return null;
+      var selected = selectedSiteValues();
+      if (!selected.length) return "sede IN ('__no_selected_sites__')";
+      if (selected.length === siteOptions.length) return null;
+      return "sede IN (" + selected.map(cqlLiteral).join(",") + ")";
+    }
+
+    function applyFilterParams(params) {
+      var filter = activeSiteFilter();
+      if (filter) params.cql_filter = filter;
+      return params;
+    }
+
     function wmsUrl(request, extra) {
       var view = projectedView();
-      var params = {
+      var params = applyFilterParams({
         service: "WMS",
         version: "1.1.1",
         request: request,
@@ -396,18 +475,25 @@
         height: view.height,
         format: "image/png",
         transparent: "true"
-      };
+      });
       Object.keys(extra || {}).forEach(function (key) { params[key] = extra[key]; });
       return geoserverUrl("/fds/wms") + L.Util.getParamString(params, geoserverUrl("/fds/wms"), true);
     }
 
     function refreshCompanies() {
-      if (!layerVisible) return;
+      if (!layerVisible) {
+        if (companyOverlay) {
+          map.removeLayer(companyOverlay);
+          companyOverlay = null;
+        }
+        document.getElementById("status-text").textContent = "Layer hidden";
+        return;
+      }
       var requestId = ++overlayRequest;
       var view = projectedView();
       var image = new Image();
       var url = wmsUrl("GetMap", { _ts: Date.now() });
-      document.getElementById("status-text").textContent = "Updating clustersâ¦";
+      document.getElementById("status-text").textContent = "Updating clusters...";
       image.onload = function () {
         if (requestId !== overlayRequest || !layerVisible) return;
         var next = L.imageOverlay(url, view.bounds, { opacity: 0.96, interactive: false });
@@ -429,7 +515,7 @@
     }
 
     function websiteLink(value) {
-      if (!value) return "â";
+      if (!value) return "-";
       var href = /^https?:\/\//i.test(value) ? value : "https://" + value;
       return '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener">Visit website</a>';
     }
@@ -437,9 +523,9 @@
     function companyDetails(properties) {
       var p = properties || {};
       return '<div class="sector">' + escapeHtml(p.sector || "Innovation company") + '</div><dl>' +
-        '<dt>Description</dt><dd>' + escapeHtml(p.descriptio || p.description || "â") + '</dd>' +
-        '<dt>Location</dt><dd>' + escapeHtml(p.main_addr || "â") + '</dd>' +
-        '<dt>Tecnopolo site</dt><dd>' + escapeHtml(p.sede || "â") + '</dd>' +
+        '<dt>Description</dt><dd>' + escapeHtml(p.descriptio || p.description || "-") + '</dd>' +
+        '<dt>Location</dt><dd>' + escapeHtml(p.main_addr || "-") + '</dd>' +
+        '<dt>Tecnopolo site</dt><dd>' + escapeHtml(p.sede || "-") + '</dd>' +
         '<dt>Website</dt><dd>' + websiteLink(p.website) + '</dd></dl>';
     }
 
@@ -465,7 +551,7 @@
     function clusterMembersUrl(envBBOX) {
       var bbox = parseStackBounds(envBBOX);
       if (!bbox) return null;
-      var params = {
+      var params = applyFilterParams({
         service: "WFS",
         version: "2.0.0",
         request: "GetFeature",
@@ -474,13 +560,13 @@
         srsName: "EPSG:4326",
         bbox: bbox.join(",") + ",EPSG:4326",
         count: 500
-      };
+      });
       return geoserverUrl("/fds/ows") + L.Util.getParamString(params, geoserverUrl("/fds/ows"), true);
     }
 
     function visibleFeaturesUrl() {
       var bounds = map.getBounds();
-      var params = {
+      var params = applyFilterParams({
         service: "WFS",
         version: "2.0.0",
         request: "GetFeature",
@@ -491,8 +577,76 @@
           bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth(), "EPSG:4326"
         ].join(","),
         count: 5000
+      });
+      return geoserverUrl("/fds/ows") + L.Util.getParamString(params, geoserverUrl("/fds/ows"), true);
+    }
+
+    function siteInventoryUrl() {
+      var params = {
+        service: "WFS",
+        version: "2.0.0",
+        request: "GetFeature",
+        typeNames: LAYER,
+        outputFormat: "application/json",
+        srsName: "EPSG:4326",
+        count: 10000
       };
       return geoserverUrl("/fds/ows") + L.Util.getParamString(params, geoserverUrl("/fds/ows"), true);
+    }
+
+    function renderSiteControls() {
+      var siteList = document.getElementById("site-list");
+      var selected = selectedSiteValues();
+      document.getElementById("companies-toggle").checked = !!selected.length;
+      document.getElementById("site-summary").textContent = selected.length + " of " + siteOptions.length + " sites visible";
+      if (!siteOptions.length) {
+        siteList.innerHTML = '<div class="layer-meta">No site layers available.</div>';
+        return;
+      }
+      siteList.innerHTML = siteOptions.map(function (site) {
+        var checked = !!selectedSites[site.name];
+        return '<label class="site-row' + (checked ? "" : " is-off") + '">' +
+          '<input type="checkbox" data-site="' + escapeHtml(site.name) + '"' + (checked ? " checked" : "") + ">" +
+          '<span class="site-name" title="' + escapeHtml(site.name) + '">' + escapeHtml(site.name) + '</span>' +
+          '<span class="site-count">' + escapeHtml(site.count) + '</span>' +
+          '</label>';
+      }).join("");
+      siteList.querySelectorAll("input[data-site]").forEach(function (input) {
+        input.onchange = function () {
+          selectedSites[this.getAttribute("data-site")] = this.checked;
+          layerVisible = !!selectedSiteValues().length;
+          renderSiteControls();
+          refreshViewport();
+        };
+      });
+    }
+
+    function loadSiteInventory() {
+      fetch(siteInventoryUrl(), { credentials: "same-origin" })
+        .then(function (response) {
+          if (!response.ok) throw new Error("WFS HTTP " + response.status);
+          return response.json();
+        })
+        .then(function (data) {
+          var counts = {};
+          (data.features || []).forEach(function (feature) {
+            var site = (feature.properties && feature.properties.sede) || "Unassigned";
+            counts[site] = (counts[site] || 0) + 1;
+          });
+          siteOptions = Object.keys(counts).sort(function (a, b) {
+            return a.localeCompare(b);
+          }).map(function (name) {
+            if (selectedSites[name] == null) selectedSites[name] = true;
+            return { name: name, count: counts[name] };
+          });
+          layerVisible = !!selectedSiteValues().length;
+          renderSiteControls();
+          refreshViewport();
+        })
+        .catch(function () {
+          document.getElementById("site-summary").textContent = "Site layers unavailable";
+          document.getElementById("site-list").innerHTML = '<div class="layer-meta">Could not load site layers.</div>';
+        });
     }
 
     function displayColumnName(key) {
@@ -567,7 +721,7 @@
         return '<a href="' + escapeHtml(href) + '" target="_blank" rel="noopener">' +
           escapeHtml(value) + '</a>';
       }
-      return escapeHtml(value == null || value === "" ? "â" : value);
+      return escapeHtml(value == null || value === "" ? "-" : value);
     }
 
     function renderFeatureTable() {
@@ -603,7 +757,7 @@
 
       table.querySelector("thead").innerHTML = "<tr>" + tableColumns.map(function (key) {
         var sorted = tableSort.key === key;
-        var arrow = sorted ? (tableSort.direction === "asc" ? " â²" : " â¼") : "";
+        var arrow = sorted ? (tableSort.direction === "asc" ? " ▲" : " ▼") : "";
         return '<th scope="col" data-column="' + escapeHtml(key) + '" class="' + (sorted ? "sorted" : "") +
           '" aria-sort="' + (sorted ? (tableSort.direction === "asc" ? "ascending" : "descending") : "none") +
           '">' + escapeHtml(displayColumnName(key)) + arrow + "</th>";
@@ -628,11 +782,21 @@
     }
 
     function refreshFeatureTable() {
-      if (!layerVisible) return;
+      if (!layerVisible) {
+        tableRequest++;
+        if (tableAbortController) tableAbortController.abort();
+        visibleFeatures = [];
+        tableColumns = [];
+        document.getElementById("records-table").hidden = true;
+        document.getElementById("table-message").hidden = false;
+        document.getElementById("table-message").textContent = "No site layers selected.";
+        document.getElementById("table-count").textContent = "No sites visible";
+        return;
+      }
       var requestId = ++tableRequest;
       if (tableAbortController) tableAbortController.abort();
       tableAbortController = typeof AbortController === "undefined" ? null : new AbortController();
-      document.getElementById("table-count").textContent = "Updating visible recordsâ¦";
+      document.getElementById("table-count").textContent = "Updating visible records...";
       fetch(visibleFeaturesUrl(), {
         credentials: "same-origin",
         signal: tableAbortController ? tableAbortController.signal : undefined
@@ -697,7 +861,7 @@
         x: Math.round(point.x),
         y: Math.round(point.y)
       });
-      var popup = L.popup().setLatLng(event.latlng).setContent("Loadingâ¦").openOn(map);
+      var popup = L.popup().setLatLng(event.latlng).setContent("Loading...").openOn(map);
       fetch(url, { credentials: "same-origin" })
         .then(function (response) {
           if (!response.ok) throw new Error("HTTP " + response.status);
@@ -721,7 +885,7 @@
           }
           popup.setContent(
             '<div class="feature-popup cluster-popup"><strong>' + escapeHtml(properties.count) +
-            '</strong><h3>Loading companiesâ¦</h3></div>'
+            '</strong><h3>Loading companies...</h3></div>'
           );
           return fetch(membersUrl, { credentials: "same-origin" })
             .then(function (response) {
@@ -736,20 +900,31 @@
     });
 
     document.getElementById("companies-toggle").onchange = function () {
-      layerVisible = this.checked;
-      if (!layerVisible) {
-        if (companyOverlay) {
-          map.removeLayer(companyOverlay);
-          companyOverlay = null;
-        }
-        tableRequest++;
-        if (tableAbortController) tableAbortController.abort();
-        visibleFeatures = [];
-        renderFeatureTable();
-        document.getElementById("status-text").textContent = "Layer hidden";
-      } else {
-        refreshViewport();
-      }
+      var checked = this.checked;
+      siteOptions.forEach(function (site) {
+        selectedSites[site.name] = checked;
+      });
+      layerVisible = checked;
+      renderSiteControls();
+      refreshViewport();
+    };
+
+    document.getElementById("sites-select-all").onclick = function () {
+      siteOptions.forEach(function (site) {
+        selectedSites[site.name] = true;
+      });
+      layerVisible = true;
+      renderSiteControls();
+      refreshViewport();
+    };
+
+    document.getElementById("sites-clear").onclick = function () {
+      siteOptions.forEach(function (site) {
+        selectedSites[site.name] = false;
+      });
+      layerVisible = false;
+      renderSiteControls();
+      refreshViewport();
     };
 
     document.querySelectorAll("[data-basemap]").forEach(function (button) {
@@ -772,7 +947,7 @@
     };
     document.getElementById("table-search").oninput = renderFeatureTable;
 
-    refreshViewport();
+    loadSiteInventory();
   </script>
 </body>
 </html>
